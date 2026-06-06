@@ -1,0 +1,21 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = [
+    ".cache",
+    ".venv",
+    "analiza",
+    "dane_dla_AI",
+    "output",
+    "weights",
+    "zidentyfikowane_wraki",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/analyze.py" = ["E402"]
+"analyze.py" = ["E402"]
+"scripts/download_geoportal_krajowy.py" = ["E402"]
+"scripts/download_geoportal_wfs_geotiff.py" = ["E402"]
