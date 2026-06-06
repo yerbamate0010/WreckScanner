@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pl" data-i18n-title="page.report.title" data-i18n-description="page.report.description">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zgłoś problem - WreckScanner</title>
+    <meta name="description" content="Formularz żądania usunięcia, anonimizacji albo korekty publicznego wpisu lub zdjęcia.">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body { min-height: 100vh; background: #0b1120; color: #e5e7eb; font-family: var(--font, system-ui, sans-serif); }
+        main { max-width: 760px; margin: 0 auto; padding: 32px 18px 48px; }
+        h1 { margin: 0 0 12px; }
+        p { color: #cbd5e1; line-height: 1.65; }
+        a { color: #93c5fd; }
+        form { display: grid; gap: 14px; margin-top: 22px; }
+        label { display: grid; gap: 6px; color: #cbd5e1; font-weight: 700; }
+        input, textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 8px; background: #020617; color: #e5e7eb; padding: 11px 12px; font: inherit; }
+        textarea { min-height: 160px; resize: vertical; }
+        button { justify-self: start; border: 0; border-radius: 8px; background: #2563eb; color: #fff; padding: 11px 16px; font-weight: 800; cursor: pointer; }
+        #status { min-height: 22px; }
+    </style>
+</head>
+<body>
+<main>
+    <p><a href="/" data-i18n="page.nav.map">Mapa</a> · <a href="/privacy" data-i18n="page.nav.privacy">Prywatność</a></p>
+    <h1 data-i18n="page.report.heading">Zgłoś problem z wpisem lub zdjęciem</h1>
+    <p data-i18n="page.report.intro">Użyj formularza, jeżeli chcesz zgłosić prośbę o usunięcie, anonimizację albo korektę publicznego wpisu. Podaj link do wpisu, identyfikator zdjęcia albo inny opis, który pozwoli administratorowi znaleźć sprawę.</p>
+    <form id="privacy-request-form">
+        <label>
+            <span data-i18n="page.report.email">E-mail do kontaktu</span>
+            <input type="email" name="email" maxlength="180" required>
+        </label>
+        <label>
+            <span data-i18n="page.report.target">Link albo identyfikator wpisu</span>
+            <input type="text" name="target" maxlength="500" required>
+        </label>
+        <label>
+            <span data-i18n="page.report.reason">Opis żądania</span>
+            <textarea name="reason" maxlength="4000" required></textarea>
+        </label>
+        <button type="submit" data-i18n="page.report.submit">Wyślij zgłoszenie</button>
+        <p id="status"></p>
+    </form>
+</main>
+<script src="/i18n.js"></script>
+<script>
+document.getElementById('privacy-request-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const status = document.getElementById('status');
+    const data = Object.fromEntries(new FormData(form).entries());
+    status.textContent = t('page.report.sending');
+    const resp = await fetch('/api/privacy-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    }).catch(err => ({ ok: false, json: async () => ({ error: err.message }) }));
+    const payload = await resp.json().catch(() => ({}));
+    if (!resp.ok || payload.status !== 'ok') {
+        status.textContent = payload.error || t('page.report.saveError');
+        return;
+    }
+    form.reset();
+    status.textContent = t('page.report.saved', { id: payload.request_id });
+});
+</script>
+</body>
+</html>

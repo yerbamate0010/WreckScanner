@@ -1,0 +1,10 @@
+# Pobieranie ortofotomap
+requests>=2.31
+Pillow>=10.0
+rasterio>=1.3
+
+# Analiza i detekcja
+opencv-python>=4.9
+numpy>=1.26
+scikit-learn>=1.3
+ultralytics>=8.2     # YOLO-OBB pretrenowany na DOTA (aerial)
