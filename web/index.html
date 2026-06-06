@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wrocław Ortho — Pobierz dane dla AI</title>
+    <meta name="description"
+        content="Interaktywna mapa do pobierania historycznych ortofotomap Wrocławia z lat 2020-2025.">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23152738' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'%3E%3C/path%3E%3C/svg%3E">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+
+    <!-- Interactive Map -->
+    <div id="map"></div>
+
+    <!-- Crosshair at the center -->
+    <div id="crosshair">
+        <div class="ring"></div>
+        <div class="size-label" id="size-label">50 × 50 m</div>
+    </div>
+
+    <!-- Map source slider -->
+    <div id="year-slider">
+        <button type="button" class="year-arrow" id="year-prev" title="◀">◀</button>
+        <div class="year-track">
+            <input type="range" id="year-range" min="0" max="7" step="1" value="5">
+            <div class="year-ticks" id="year-ticks"></div>
+        </div>
+        <button type="button" class="year-arrow" id="year-next" title="▶">▶</button>
+        <div class="year-current" id="year-current">2025</div>
+    </div>
+
+    <!-- Map right-click menu -->
+    <div id="map-context-menu" class="map-context-menu" hidden>
+        <div class="context-menu-coords" id="context-menu-coords"></div>
+        <button type="button" onclick="centerScanOnContextPoint()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M12 2C8.13 2 5 5.13 5 9c0 4.31 4.7 10.15 6.34 12.04a.88.88 0 0 0 1.32 0C14.3 19.15 19 13.31 19 9c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
+            </svg>
+            <span data-i18n="context.centerScan">Ustaw środek skanu</span>
+        </button>
+        <button type="button" onclick="openFieldPhotoUploadAtContextPoint()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M5 7h2.8L9.4 5h5.2l1.6 2H19c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2zm7 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-2.1a2.9 2.9 0 1 1 0-5.8 2.9 2.9 0 0 1 0 5.8z" />
+            </svg>
+            <span data-i18n="context.addFieldPhotos">Dodaj zdjęcia tutaj</span>
+        </button>
+        <button type="button" onclick="identifyCadastralParcelAtContextPoint()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M4 4h16v16H4V4zm2 2v5h5V6H6zm7 0v5h5V6h-5zM6 13v5h5v-5H6zm7 0v5h5v-5h-5z" />
+            </svg>
+            <span data-i18n="context.identifyParcel">Sprawdź działkę</span>
+        </button>
+        <button type="button" onclick="toggleCrosshairFromContextMenu()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M11 2h2v4h-2V2zm0 16h2v4h-2v-4zM2 11h4v2H2v-2zm16 0h4v2h-4v-2zm-6-3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+            </svg>
+            <span id="context-crosshair-label" data-i18n="context.hideCrosshair">Ukryj celownik</span>
+        </button>
+        <button type="button" class="map-context-secondary" onclick="copyContextCoords()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+            </svg>
+            <span data-i18n="context.copyCoords">Kopiuj współrzędne</span>
+        </button>
+        <button type="button" onclick="copyContextPlaceLink()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M3.9 12a5 5 0 0 1 5-5h4v2h-4a3 3 0 0 0 0 6h4v2h-4a5 5 0 0 1-5-5zm5.1 1h6v-2H9v2zm2-6h4a5 5 0 0 1 0 10h-4v-2h4a3 3 0 0 0 0-6h-4V7z" />
+            </svg>
+            <span data-i18n="context.copyPlaceLink">Skopiuj link do miejsca</span>
+        </button>
+    </div>
+
+    <!-- Floating Control Panel -->
+    <div id="panel">
+        <!-- Akcje panelu: pomoc + ustawienia + panel administratora -->
+        <div class="panel-icons">
+            <button type="button" class="btn-icon" id="open-help"
+                data-i18n-attr="title:icon.help" title="Jak korzystać" onclick="openModal('modal-help')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+            </button>
+            <button type="button" class="btn-icon" id="open-settings" data-i18n-attr="title:icon.settings"
+                title="Ustawienia" onclick="openSettingsModal()">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19.14 12.94c.04-.31.06-.62.06-.94 0-.32-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96a7.026 7.026 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.07.49.12.61l2.03 1.58c-.04.31-.07.62-.07.94 0 .32.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.25.41.48.41h3.84c.24 0 .43-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                </svg>
+            </button>
+            <button type="button" class="btn-icon" id="open-admin-panel" data-i18n-attr="title:icon.adminPanel"
+                title="Panel administratora" onclick="openAdminPanel()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17 9V7A5 5 0 0 0 7 7v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9zm5 8h-2v-4h2v4z" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="panel-header panel-header-toggle" id="panel-header-toggle" role="button" tabindex="0"
+            data-i18n-attr="title:icon.fold;aria-label:icon.fold" title="Zwiń panel" aria-label="Zwiń panel"
+            aria-expanded="true" onclick="togglePanel()" onkeydown="handlePanelHeaderToggleKey(event)">
+            <div class="icon">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                </svg>
+            </div>
+            <div class="panel-title-wrap">
+                <h1 id="panel-title" data-i18n="panel.title">Wrocław</h1>
+                <span class="lingering-cars-badge" id="lingering-cars-badge"
+                    data-i18n-attr="title:panel.lingeringCarsTooltip;aria-label:panel.lingeringCarsTooltip"
+                    title="Pojazdy udokumentowane zdjęciami w terenie"
+                    aria-label="Pojazdy udokumentowane zdjęciami w terenie">0</span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <hr class="sep">
+
+            <!-- Live map center -->
+            <div class="coord-display">
+                <span class="coord-label" data-i18n="panel.coords">Środek mapy</span>
+                <strong class="coord-values"><span id="lat-val">51.089742</span>, <span
+                        id="lon-val">17.038940</span></strong>
+            </div>
+
+            <section class="panel-section panel-layers">
+                <div class="panel-section-title" data-i18n="layers.title">Warstwy</div>
+                <div id="map-layer-controls" class="map-layer-controls" aria-label="Warstwy mapy">
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="toggle-saved-wrecks" checked
+                            onchange="toggleSavedWreckLayer(this.checked)">
+                        <span class="layer-pin layer-pin--wreck"></span>
+                        <span data-i18n="layers.savedWrecks">Sprawy pojazdów</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="toggle-field-photo-vehicle" checked
+                            onchange="toggleFieldPhotoIssueFilter('vehicle', this.checked)">
+                        <span class="layer-pin layer-pin--field-photo-vehicle"></span>
+                        <span data-i18n="layers.fieldPhotoVehicles">Zdjęcia pojazdów</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="toggle-field-photo-infrastructure" checked
+                            onchange="toggleFieldPhotoIssueFilter('infrastructure', this.checked)">
+                        <span class="layer-pin layer-pin--field-photo-infrastructure"></span>
+                        <span data-i18n="layers.fieldPhotoInfrastructure">Niebezpieczna infrastruktura</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="toggle-field-photo-smoke" checked
+                            onchange="toggleFieldPhotoIssueFilter('smoke', this.checked)">
+                        <span class="layer-pin layer-pin--field-photo-smoke"></span>
+                        <span data-i18n="layers.fieldPhotoSmoke">Dym papierosowy</span>
+                    </label>
+                    <label class="layer-toggle" data-i18n-attr="title:layers.cadastralTooltip">
+                        <input type="checkbox" id="toggle-cadastral-parcels"
+                            onchange="toggleCadastralLayer(this.checked)">
+                        <span class="layer-pin layer-pin--cadastral"></span>
+                        <span data-i18n="layers.cadastral">Granice działek</span>
+                    </label>
+                    <label class="layer-toggle" data-i18n-attr="title:layers.surfaceTooltip">
+                        <input type="checkbox" id="toggle-surface-layer"
+                            onchange="setSurfaceLayerVisible(this.checked)">
+                        <span class="layer-pin layer-pin--surface"></span>
+                        <span data-i18n="layers.surface">Nawierzchnia</span>
+                        <small class="layer-status" id="surface-layer-status" aria-live="polite"></small>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Combined button: clear + download + analyze -->
+            <button type="button" class="btn-download btn-analyze" id="btn-run" onclick="runAll()">
+                <div class="spinner" id="spinner"></div>
+                <svg id="run-icon" viewBox="0 0 24 24">
+                    <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                <span data-i18n="panel.run">Skanuj obszar</span>
+            </button>
+
+            <!-- Status (tylko gdy są błędy ogólne / sieci) -->
+            <div id="status"></div>
+
+            <!-- Strukturalny postęp pipeline'u -->
+            <div id="progress" hidden>
+                <div class="step" id="step-download">
+                    <span class="step-icon"></span>
+                    <span class="step-label" data-i18n="step.download.label">Pobieranie ortofotomap</span>
+                    <span class="step-time"></span>
+                    <div class="step-meta"></div>
+                    <div class="step-progress">
+                        <div></div>
+                    </div>
+                </div>
+                <div class="step" id="step-detect">
+                    <span class="step-icon"></span>
+                    <span class="step-label" data-i18n="step.detect.label">Wykrywanie pojazdów</span>
+                    <span class="step-time"></span>
+                    <div class="step-meta"></div>
+                    <div class="step-progress">
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wiersz akcji: raport + kosz (po analizie) -->
+            <div class="result-actions" id="result-actions" hidden>
+                <a id="btn-report" class="btn-download btn-report" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                    </svg>
+                    <span id="report-label" data-i18n="result.reportShort">Raport</span>
+                </a>
+                <button type="button" id="btn-clear" class="btn-trash" data-i18n-attr="title:icon.clear"
+                    title="Wyczyść wyniki z mapy" onclick="clearResults()">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M9 3v1H4v2h16V4h-5V3H9zm-3 5l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13H6zm4 3h1v9h-1v-9zm3 0h1v9h-1v-9z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="footer">
+                <div class="social-links">
+                    <a href="https://github.com/yerbamate0010/WreckScanner" target="_blank" rel="noopener"
+                        aria-label="GitHub">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 0.5C5.73 0.5.5 5.73.5 12.02c0 5.17 3.35 9.56 7.99 11.11.58.11.79-.25.79-.56 0-.28-.01-1.02-.01-2.01-3.25.71-3.94-1.56-3.94-1.56-.53-1.36-1.3-1.72-1.3-1.72-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.11-.76.41-1.27.74-1.56-2.59-.29-5.31-1.3-5.31-5.8 0-1.28.46-2.33 1.21-3.15-.12-.3-.53-1.52.12-3.17 0 0 .98-.31 3.2 1.2a11.14 11.14 0 0 1 2.91-.39 11.1 11.1 0 0 1 2.91.39c2.22-1.52 3.2-1.2 3.2-1.2.65 1.65.24 2.87.12 3.17.75.82 1.21 1.87 1.21 3.15 0 4.5-2.73 5.5-5.32 5.8.42.36.79 1.08.79 2.18 0 1.57-.01 2.84-.01 3.23 0 .31.21.68.8.56 4.64-1.55 7.99-5.94 7.99-11.11C23.5 5.73 18.27.5 12 .5z" />
+                        </svg>
+                    </a>
+                    <a href="https://www.facebook.com/WreckScanner/" target="_blank" rel="noopener"
+                        aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M13.5 21V13.5h2.75l.4-3.1h-3.15V8.13c0-.9.25-1.52 1.55-1.52h1.65V4.02A22.4 22.4 0 0 0 14.2 4C11.8 4 10 5.66 10 8.6V10.4H7.5v3.1H10V21h3.5z" />
+                        </svg>
+                    </a>
+                    <a href="https://www.youtube.com/@MeeHowq" target="_blank" rel="noopener" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M23.5 6.02a2.8 2.8 0 0 0-1.96-1.98C19.64 3.5 12 3.5 12 3.5s-7.64 0-9.54.54A2.8 2.8 0 0 0 .5 6.02 28.17 28.17 0 0 0 0 12a28.17 28.17 0 0 0 .5 5.98 2.8 2.8 0 0 0 1.96 1.98c1.9.54 9.54.54 9.54.54s7.64 0 9.54-.54a2.8 2.8 0 0 0 1.96-1.98A28.17 28.17 0 0 0 24 12a28.17 28.17 0 0 0-.5-5.98zM9.75 15.5v-7l6 3.5-6 3.5z" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div><!-- /panel-body -->
+    </div>
+
+    <!-- ─── MODAL: LOGOWANIE ADMINA ─────────────────────── -->
+    <div class="modal-backdrop" id="modal-admin-login" hidden onclick="closeAdminLoginModal(false, this)">
+        <form class="modal modal--admin-login draggable-modal" id="admin-login-form" onclick="event.stopPropagation()"
+            onsubmit="submitAdminLogin(event)">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.admin.title">Panel administratora</h2>
+                <button type="button" class="modal-close" onclick="closeAdminLoginModal(false)"
+                    data-i18n-attr="aria-label:icon.close" aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body admin-login-body">
+                <section class="modal-section">
+                    <label class="report-field">
+                        <span data-i18n="modal.admin.password">Hasło administratora</span>
+                        <input type="password" class="modal-input" id="admin-password-input"
+                            autocomplete="current-password" required>
+                    </label>
+                    <p class="modal-hint" id="admin-login-status"></p>
+                </section>
+                <button type="submit" class="btn-download admin-login-submit" id="admin-login-submit">
+                    <span data-i18n="modal.admin.submit">Zaloguj</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ─── MODAL: POTWIERDZENIE AKCJI ─────────────────── -->
+    <div class="modal-backdrop" id="modal-confirm" hidden onclick="closeConfirmModal(false, this)">
+        <form class="modal modal--confirm draggable-modal" id="confirm-form" onclick="event.stopPropagation()"
+            onsubmit="submitConfirmAction(event)">
+            <div class="modal-header modal-drag-handle">
+                <h2 id="confirm-title" data-i18n="modal.confirm.title">Potwierdź akcję</h2>
+                <button type="button" class="modal-close" onclick="closeConfirmModal(false)"
+                    data-i18n-attr="aria-label:icon.close" aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body confirm-body">
+                <p class="confirm-message" id="confirm-message"></p>
+                <div class="confirm-actions">
+                    <button type="button" class="confirm-cancel-btn" id="confirm-cancel"
+                        onclick="closeConfirmModal(false)" data-i18n="modal.confirm.cancel">Anuluj</button>
+                    <button type="submit" class="confirm-danger-btn" id="confirm-submit"
+                        data-i18n="modal.confirm.delete">Usuń</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ─── MODAL: USTAWIENIA ───────────────────────────── -->
+    <div class="modal-backdrop modal-backdrop--floating" id="modal-settings" hidden onclick="closeModal(this)">
+        <div class="modal modal--settings draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.settings.title">Ustawienia</h2>
+                <div class="modal-header-actions">
+                    <button type="button" class="modal-icon-btn btn-lang" id="settings-toggle-lang"
+                        data-i18n-attr="title:icon.lang;aria-label:icon.lang" title="Język / Language"
+                        aria-label="Język / Language" onclick="toggleLang()">
+                        <span class="lang-label" id="settings-lang-label">PL</span>
+                    </button>
+                    <button type="button" class="modal-close" onclick="closeModal()"
+                        data-i18n-attr="aria-label:icon.close" aria-label="Zamknij">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <section class="modal-section scan-area-section">
+                    <div class="setting-toggle-row">
+                        <label class="modal-label" for="width-slider" data-i18n="modal.settings.scanArea">Obszar
+                            skanu</label>
+                        <output class="scan-area-output" id="width-display">50 m</output>
+                    </div>
+                    <input type="range" id="width-slider" min="50" max="50" value="50" step="5">
+                    <div hidden>
+                        <span id="height-display">50 m</span>
+                        <input type="range" id="height-slider" min="50" max="50" value="50" step="5">
+                    </div>
+                    <p class="modal-hint" data-i18n="modal.settings.scanAreaHint">Minimum 50 m; mniejsze kadry rzadko
+                        dają użyteczny kontekst.</p>
+                </section>
+
+                <p class="modal-hint settings-lock-hint" id="settings-lock-hint" data-i18n="modal.settings.lockedHint">
+                    Zaloguj administratora, żeby edytować ustawienia.</p>
+                <section class="modal-section">
+                    <label class="modal-label" for="model-select" data-i18n="modal.settings.model">Model YOLO</label>
+                    <select id="model-select">
+                        <option value="weights/yolo11s-obb.pt" selected data-i18n="modal.settings.modelSmall">Small —
+                            szybki (domyślny)</option>
+                        <option value="weights/yolo11m-obb.pt" data-i18n="modal.settings.modelMedium">Medium —
+                            dokładniejszy (wolniejszy)</option>
+                    </select>
+                    <p class="modal-hint" data-i18n="modal.settings.modelHint">Model OBB (oriented bounding box) z
+                        rodziny YOLO11 do wykrywania pojazdów na obrazach lotniczych.</p>
+                </section>
+
+                <section class="modal-section">
+                    <label class="modal-label" for="conf-select" data-i18n="modal.settings.sensitivity">Czułość
+                        detekcji</label>
+                    <select id="conf-select">
+                        <option value="0.10" data-i18n="modal.settings.sensHigh">Czuły — więcej kandydatów</option>
+                        <option value="0.15" selected data-i18n="modal.settings.sensStd">Standard (domyślny)</option>
+                        <option value="0.30" data-i18n="modal.settings.sensStrict">Strict — tylko twarde przypadki
+                        </option>
+                    </select>
+                    <p class="modal-hint" data-i18n="modal.settings.sensHint">Próg pewności YOLO. Niższy = więcej
+                        detekcji (też fałszywych), wyższy = krótka lista pewniaków.</p>
+                </section>
+
+                <section class="modal-section">
+                    <label class="modal-label" for="crop-select" data-i18n="modal.settings.crop">Zoom miniatur w
+                        raporcie</label>
+                    <select id="crop-select">
+                        <option value="5" data-i18n="modal.settings.crop5">5 m — ciasny</option>
+                        <option value="7.5" selected data-i18n="modal.settings.crop75">7.5 m — standard</option>
+                        <option value="10" data-i18n="modal.settings.crop10">10 m — szerzej</option>
+                        <option value="15" data-i18n="modal.settings.crop15">15 m — szeroki</option>
+                        <option value="20" data-i18n="modal.settings.crop20">20 m — kontekst</option>
+                    </select>
+                    <p class="modal-hint" data-i18n="modal.settings.cropHint">Wielkość wycinka w metrach. Analiza
+                        przelicza ją na piksele według skali pobranych ortofotomap.</p>
+                </section>
+
+                <section class="modal-section">
+                    <label class="modal-label" for="geotiff-cache-limit" data-i18n="modal.settings.cache">Cache
+                        GeoTIFF</label>
+                    <select id="geotiff-cache-limit">
+                        <option value="2" data-i18n="modal.settings.cache2">2 GB — oszczędnie</option>
+                        <option value="4" selected data-i18n="modal.settings.cache4">4 GB — domyślnie</option>
+                        <option value="8" data-i18n="modal.settings.cache8">8 GB — wygodnie</option>
+                        <option value="16" data-i18n="modal.settings.cache16">16 GB — dużo obszarów</option>
+                        <option value="none" data-i18n="modal.settings.cacheNone">Bez limitu</option>
+                    </select>
+                    <p class="modal-hint" data-i18n="modal.settings.cacheHint">Limit dotyczy surowych GeoTIFF. Po
+                        przekroczeniu aplikacja usuwa najstarsze kompletne arkusze, a przerwane pliki .part wznawia.</p>
+                </section>
+
+                <section class="modal-section">
+                    <div class="setting-toggle-row">
+                        <label class="modal-label" for="enhancement-enabled"
+                            data-i18n="modal.settings.enhancement">Filtr ortofoto</label>
+                        <div class="setting-actions">
+                            <button type="button" class="settings-reset-btn" id="enhancement-reset"
+                                data-i18n="modal.settings.resetDefaults">Domyślne</button>
+                            <input type="checkbox" id="enhancement-enabled" checked>
+                        </div>
+                    </div>
+                    <div class="settings-grid">
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.clahe">Kontrast lokalny</span>
+                            <output id="enhancement-clahe-value">1.5</output>
+                            <input type="range" id="enhancement-clahe" min="0.1" max="5" step="0.1" value="1.5">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.tileGrid">Rozmiar siatki CLAHE</span>
+                            <output id="enhancement-tile-value">8</output>
+                            <input type="range" id="enhancement-tile" min="1" max="32" step="1" value="8">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.percentileLow">Percentyl cieni</span>
+                            <output id="enhancement-p-low-value">2</output>
+                            <input type="range" id="enhancement-p-low" min="0" max="40" step="0.5" value="2">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.percentileHigh">Percentyl świateł</span>
+                            <output id="enhancement-p-high-value">98</output>
+                            <input type="range" id="enhancement-p-high" min="60" max="100" step="0.5" value="98">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.outputLow">Poziom czerni</span>
+                            <output id="enhancement-out-low-value">10</output>
+                            <input type="range" id="enhancement-out-low" min="0" max="120" step="1" value="10">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.outputHigh">Poziom bieli</span>
+                            <output id="enhancement-out-high-value">245</output>
+                            <input type="range" id="enhancement-out-high" min="135" max="255" step="1" value="245">
+                        </label>
+                        <label class="setting-range">
+                            <span data-i18n="modal.settings.decast">Neutralizacja koloru</span>
+                            <output id="enhancement-decast-value">0.4</output>
+                            <input type="range" id="enhancement-decast" min="0" max="1" step="0.05" value="0.4">
+                        </label>
+                    </div>
+                    <p class="modal-hint" id="settings-save-status" data-i18n="modal.settings.enhancementHint">Te same
+                        parametry są używane w podglądzie mapy i przed analizą YOLO.</p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MODAL: PANEL ADMINISTRATORA ─────────────────────── -->
+    <div class="modal-backdrop modal-backdrop--floating" id="modal-admin-panel" hidden onclick="closeModal(this)">
+        <div class="modal modal--admin-panel draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.adminPanel.title">Panel administratora</h2>
+                <div class="modal-header-actions">
+                    <button type="button" class="modal-icon-btn" id="admin-login"
+                        data-i18n-attr="title:icon.adminLogout;aria-label:icon.adminLogout" title="Wyloguj administratora"
+                        aria-label="Wyloguj administratora" onclick="toggleAdminLogin()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 9V7A5 5 0 0 0 7 7v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9zm5 8h-2v-4h2v4z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="modal-close" onclick="closeModal()"
+                        data-i18n-attr="aria-label:icon.close" aria-label="Zamknij">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body admin-panel-body">
+                <section class="modal-section admin-panel-section">
+                    <h3 data-i18n="modal.adminPanel.tools">Narzędzia</h3>
+                    <div class="admin-panel-actions">
+                        <button type="button" class="admin-panel-action admin-only" id="open-field-photo-upload"
+                            onclick="openFieldPhotoUploadModal()" hidden>
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 7h2.8L9.4 5h5.2l1.6 2H19c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2zm7 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-2.1a2.9 2.9 0 1 1 0-5.8 2.9 2.9 0 0 1 0 5.8z" />
+                            </svg>
+                            <span data-i18n="icon.fieldPhotoUpload">Dodaj zdjęcia terenowe</span>
+                        </button>
+                        <button type="button" class="admin-panel-action admin-only" id="open-photo-review"
+                            onclick="openPhotoReviewModal()" hidden>
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 5h16v14H4V5zm2 2v10h12V7H6zm2 8h8l-2.5-3.2-1.8 2.2-1.3-1.5L8 15zm7.5-6.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                            </svg>
+                            <span data-i18n="icon.photoReview">Przegląd zdjęć</span>
+                        </button>
+                        <button type="button" class="admin-panel-action admin-only" id="open-privacy-requests"
+                            onclick="openPrivacyRequestsModal()" hidden>
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 4h14v16H5V4zm2 2v12h10V6H7zm2 2h6v2H9V8zm0 4h6v2H9v-2zm0 4h4v2H9v-2z" />
+                            </svg>
+                            <span data-i18n="icon.privacyRequests">Zgłoszenia prywatności</span>
+                        </button>
+                        <button type="button" class="admin-panel-action admin-only" id="open-geotiff-cache"
+                            onclick="openGeotiffCacheModal()" hidden>
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 4h16v5H4V4zm0 7h16v9H4v-9zm3 2v2h2v-2H7zm4 0v2h6v-2h-6z" />
+                            </svg>
+                            <span data-i18n="icon.geotiffCache">Cache GeoTIFF</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="modal-section admin-panel-section">
+                    <div class="setting-toggle-row">
+                        <h3 data-i18n="modal.adminPanel.publicLayers">Warstwy dla niezalogowanych</h3>
+                        <button type="button" class="settings-reset-btn" id="admin-public-layers-save"
+                            onclick="savePublicLayerSettings()" data-i18n="modal.adminPanel.savePublicLayers">Zapisz</button>
+                    </div>
+                    <div class="admin-layer-grid">
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-saved-wrecks" checked>
+                            <span class="layer-pin layer-pin--wreck"></span>
+                            <span data-i18n="layers.savedWrecks">Sprawy pojazdów</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-field-photo-vehicle" checked>
+                            <span class="layer-pin layer-pin--field-photo-vehicle"></span>
+                            <span data-i18n="layers.fieldPhotoVehicles">Zdjęcia pojazdów</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-field-photo-infrastructure" checked>
+                            <span class="layer-pin layer-pin--field-photo-infrastructure"></span>
+                            <span data-i18n="layers.fieldPhotoInfrastructure">Niebezpieczna infrastruktura</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-field-photo-smoke" checked>
+                            <span class="layer-pin layer-pin--field-photo-smoke"></span>
+                            <span data-i18n="layers.fieldPhotoSmoke">Dym papierosowy</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-cadastral" checked>
+                            <span class="layer-pin layer-pin--cadastral"></span>
+                            <span data-i18n="layers.cadastral">Granice działek</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-surface" checked>
+                            <span class="layer-pin layer-pin--surface"></span>
+                            <span data-i18n="layers.surface">Nawierzchnia</span>
+                        </label>
+                        <label class="admin-layer-toggle">
+                            <input type="checkbox" id="admin-layer-base-map-osm" checked>
+                            <span class="layer-pin layer-pin--base-map-osm"></span>
+                            <span data-i18n="layers.baseMapOsm">Mapa OSM</span>
+                        </label>
+                    </div>
+                    <p class="modal-hint" id="admin-public-layers-status"
+                        data-i18n="modal.adminPanel.publicLayersHint">Administrator nadal widzi wszystkie warstwy; ustawienie ogranicza tylko widok niezalogowanych.</p>
+                </section>
+
+                <section class="modal-section admin-panel-section admin-panel-section--retention" id="photo-retention-section">
+                    <div class="setting-toggle-row admin-retention-header">
+                        <h3 data-i18n="modal.settings.photoRetention">Retencja oryginałów</h3>
+                        <div class="setting-actions retention-actions">
+                            <button type="button" class="settings-reset-btn" id="photo-retention-refresh"
+                                onclick="loadPhotoRetentionStatus()"
+                                data-i18n="modal.settings.photoRetentionRefresh">Odśwież</button>
+                            <button type="button" class="settings-reset-btn" id="photo-retention-dry-run"
+                                onclick="runPhotoRetention(true)"
+                                data-i18n="modal.settings.photoRetentionDryRun">Dry-run</button>
+                            <button type="button" class="confirm-danger-btn settings-danger-btn"
+                                id="photo-retention-apply" onclick="runPhotoRetention(false)"
+                                data-i18n="modal.settings.photoRetentionApply">Uruchom</button>
+                        </div>
+                    </div>
+                    <p class="modal-hint photo-retention-status" id="photo-retention-status"
+                        data-i18n="modal.settings.photoRetentionIdle">Brak raportu retencji.</p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop modal-backdrop--floating" id="modal-geotiff-cache" hidden onclick="closeModal(this)">
+        <div class="modal modal--geotiff-cache draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.geotiffCache.title">Cache GeoTIFF</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <section class="modal-section">
+                    <div class="setting-toggle-row">
+                        <label class="modal-label" data-i18n="modal.geotiffCache.summary">Podsumowanie</label>
+                        <button type="button" class="settings-reset-btn" onclick="loadGeotiffCacheStatus()"
+                            data-i18n="modal.geotiffCache.refresh">Odśwież</button>
+                    </div>
+                    <p class="modal-hint" id="geotiff-cache-status"
+                        data-i18n="modal.geotiffCache.loading">Ładuję cache GeoTIFF...</p>
+                    <div class="geotiff-cache-list" id="geotiff-cache-list"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MODAL: ZDJĘCIA TERENOWE ─────────────────────── -->
+    <div class="modal-backdrop" id="modal-field-photo-upload" hidden onclick="closeModal(this)">
+        <div class="modal modal--field-photo draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.fieldPhoto.title">Zdjęcia terenowe</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <form class="modal-body report-form" id="field-photo-form" onsubmit="submitFieldPhotoUpload(event)">
+                <section class="modal-section">
+                    <label class="modal-label" for="field-photo-issue-type" data-i18n="modal.fieldPhoto.issueType">Typ
+                        miejsca</label>
+                    <select class="modal-input" id="field-photo-issue-type">
+                        <option value="vehicle" data-i18n="fieldPhoto.issueType.vehicle">Zalegający pojazd</option>
+                        <option value="infrastructure" data-i18n="fieldPhoto.issueType.infrastructure">Niebezpieczna
+                            infrastruktura</option>
+                        <option value="smoke" data-i18n="fieldPhoto.issueType.smoke">Dym papierosowy</option>
+                    </select>
+                </section>
+                <section class="modal-section">
+                    <label class="modal-label" for="field-photo-files" data-i18n="modal.fieldPhoto.files">Pliki
+                        zdjęć</label>
+                    <div class="file-picker">
+                        <input type="file" class="file-picker-input" id="field-photo-files"
+                            accept="image/jpeg,image/png,image/webp" multiple>
+                        <label class="file-picker-button" for="field-photo-files"
+                            data-i18n="modal.fieldPhoto.chooseFiles">Wybierz zdjęcia z terenu</label>
+                        <span class="file-picker-summary" data-file-summary-for="field-photo-files"
+                            data-i18n="filePicker.empty">Nie wybrano plików</span>
+                    </div>
+                    <p class="modal-hint" data-i18n="modal.fieldPhoto.fileHint">JPG, PNG albo WebP, maks. 10 MB każde,
+                        do 25 zdjęć naraz.</p>
+                    <div class="field-photo-queue" id="field-photo-queue" hidden></div>
+                </section>
+                <section class="modal-section">
+                    <label class="modal-label" data-i18n="modal.fieldPhoto.location">Punkt fallback</label>
+                    <p class="modal-hint field-photo-fallback" id="field-photo-fallback"></p>
+                    <label class="field-photo-toggle" for="field-photo-ignore-exif">
+                        <input type="checkbox" id="field-photo-ignore-exif">
+                        <span data-i18n="modal.fieldPhoto.ignoreExifGps">Ignoruj GPS z EXIF i użyj punktu mapy</span>
+                    </label>
+                    <p class="modal-hint" data-i18n="modal.fieldPhoto.ignoreExifHint">Przydatne, gdy GPS telefonu jest
+                        mniej dokładny niż ręcznie ustawiony punkt mapy.</p>
+                </section>
+                <div class="report-actions">
+                    <button type="submit" class="btn-download report-submit-btn" id="field-photo-submit">
+                        <span data-i18n="modal.fieldPhoto.submit">Dodaj na mapę</span>
+                    </button>
+                    <button type="button" class="field-photo-retry-btn" id="field-photo-retry"
+                        onclick="retryFailedFieldPhotoUploads()" data-i18n="modal.fieldPhoto.retryFailed" hidden>Ponów
+                        błędne</button>
+                </div>
+                <p class="modal-hint" id="field-photo-status"></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-photo-review" hidden onclick="closeModal(this)">
+        <div class="modal modal--photo-review draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.photoReview.title">Przegląd zdjęć</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body photo-review-body">
+                <section class="modal-section">
+                    <label class="modal-label" for="photo-review-filter"
+                        data-i18n="modal.photoReview.filter">Status</label>
+                    <select class="modal-input" id="photo-review-filter" onchange="loadPhotoReviewQueue()">
+                        <option value="pending" data-i18n="modal.photoReview.pending">Do weryfikacji</option>
+                        <option value="approved" data-i18n="modal.photoReview.approved">Zatwierdzone</option>
+                        <option value="rejected" data-i18n="modal.photoReview.rejected">Odrzucone</option>
+                        <option value="all" data-i18n="modal.photoReview.all">Wszystkie</option>
+                    </select>
+                    <select class="modal-input" id="photo-review-scope" onchange="loadPhotoReviewQueue()">
+                        <option value="all" data-i18n="modal.photoReview.scopeAll">Wszystkie źródła</option>
+                        <option value="field" data-i18n="modal.photoReview.scopeField">zdjęcie terenowe</option>
+                        <option value="wreck" data-i18n="modal.photoReview.scopeWreck">sprawa pojazdu</option>
+                    </select>
+                    <input class="modal-input" id="photo-review-search" type="search"
+                        data-i18n-attr="placeholder:modal.photoReview.search" placeholder="Szukaj id / sprawy">
+                </section>
+                <div class="photo-review-layout">
+                    <div class="photo-review-list" id="photo-review-list"></div>
+                    <section class="photo-review-editor">
+                        <canvas id="photo-review-canvas"></canvas>
+                        <p class="modal-hint" id="photo-review-empty" data-i18n="modal.photoReview.empty">Wybierz
+                            zdjęcie z kolejki.</p>
+                        <div class="photo-review-actions">
+                            <button type="button" class="report-copy-btn" onclick="undoPhotoRedaction()"
+                                data-i18n="modal.photoReview.undo">Cofnij obszar</button>
+                            <button type="button" class="report-copy-btn" onclick="rotatePhotoRedaction(-5)"
+                                data-i18n="modal.photoReview.rotateLeft">Obróć w lewo</button>
+                            <button type="button" class="report-copy-btn" onclick="rotatePhotoRedaction(5)"
+                                data-i18n="modal.photoReview.rotateRight">Obróć w prawo</button>
+                            <button type="button" class="report-copy-btn" onclick="savePhotoReviewStatus('pending')"
+                                data-i18n="modal.photoReview.savePending">Zapisz do weryfikacji</button>
+                            <button type="button" class="confirm-danger-btn" onclick="savePhotoReviewStatus('rejected')"
+                                data-i18n="modal.photoReview.reject">Odrzuć</button>
+                            <button type="button" class="btn-download report-submit-btn"
+                                onclick="savePhotoReviewStatus('approved')">
+                                <span data-i18n="modal.photoReview.approve">Zatwierdź publicznie</span>
+                            </button>
+                        </div>
+                        <p class="modal-hint" id="photo-review-status"></p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-privacy-requests" hidden onclick="closeModal(this)">
+        <div class="modal modal--privacy-requests draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.privacyRequests.title">Zgłoszenia prywatności</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body privacy-request-body">
+                <section class="modal-section">
+                    <label class="modal-label" for="privacy-request-filter"
+                        data-i18n="modal.privacyRequests.filter">Status</label>
+                    <select class="modal-input" id="privacy-request-filter" onchange="loadPrivacyRequestQueue()">
+                        <option value="new" data-i18n="modal.privacyRequests.new">Nowe</option>
+                        <option value="in_progress" data-i18n="modal.privacyRequests.inProgress">W toku</option>
+                        <option value="done" data-i18n="modal.privacyRequests.done">Zamknięte</option>
+                        <option value="rejected" data-i18n="modal.privacyRequests.rejected">Odrzucone</option>
+                        <option value="all" data-i18n="modal.privacyRequests.all">Wszystkie</option>
+                    </select>
+                </section>
+                <div class="privacy-request-layout">
+                    <div class="privacy-request-list" id="privacy-request-list"></div>
+                    <section class="privacy-request-detail" id="privacy-request-detail">
+                        <p class="modal-hint" data-i18n="modal.privacyRequests.empty">Wybierz zgłoszenie z kolejki.</p>
+                    </section>
+                </div>
+                <p class="modal-hint" id="privacy-request-status"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MODAL: ZDJĘCIA DO TECZKI POJAZDU ───────────────── -->
+    <div class="modal-backdrop" id="modal-wreck-photo-upload" hidden onclick="closeModal(this)">
+        <div class="modal modal--wreck-photo draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.wreckPhoto.title">Zdjęcia do sprawy pojazdu</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <form class="modal-body report-form" id="wreck-photo-form" onsubmit="submitWreckPhotoUpload(event)">
+                <input type="hidden" id="wreck-photo-wreck-id">
+                <section class="modal-section">
+                    <label class="modal-label" for="wreck-photo-files" data-i18n="modal.wreckPhoto.files">Pliki
+                        zdjęć</label>
+                    <div class="file-picker">
+                        <input type="file" class="file-picker-input" id="wreck-photo-files" name="photos[]"
+                            accept="image/jpeg,image/png,image/webp" multiple>
+                        <label class="file-picker-button" for="wreck-photo-files"
+                            data-i18n="modal.wreckPhoto.chooseFiles">Wybierz zdjęcia do sprawy</label>
+                        <span class="file-picker-summary" data-file-summary-for="wreck-photo-files"
+                            data-i18n="filePicker.empty">Nie wybrano plików</span>
+                    </div>
+                    <p class="modal-hint" data-i18n="modal.wreckPhoto.fileHint">JPG, PNG albo WebP, maks. 10 MB każde,
+                        do 25 zdjęć naraz.</p>
+                </section>
+                <div class="report-actions">
+                    <button type="submit" class="btn-download report-submit-btn" id="wreck-photo-submit">
+                        <span data-i18n="modal.wreckPhoto.submit">Dodaj do sprawy</span>
+                    </button>
+                </div>
+                <p class="modal-hint" id="wreck-photo-status"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── MODAL: GENERATOR ZGŁOSZENIA ─────────────────── -->
+    <div class="modal-backdrop" id="modal-report-package" hidden onclick="closeModal(this)">
+        <div class="modal modal--report draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.report.title">Zgłoszenie do weryfikacji</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <form class="modal-body report-form" id="report-package-form" onsubmit="submitReportPackage(event)">
+                <input type="hidden" id="report-wreck-id">
+
+                <section class="modal-section">
+                    <label class="modal-label" data-i18n="modal.report.reporter">Dane zgłaszającego</label>
+                    <div class="report-grid">
+                        <label class="report-field">
+                            <span data-i18n="modal.report.reporterName">Imię i nazwisko</span>
+                            <input type="text" name="reporter_name" maxlength="120" required>
+                        </label>
+                        <label class="report-field">
+                            <span data-i18n="modal.report.reporterEmail">E-mail</span>
+                            <input type="email" name="reporter_email" maxlength="160" required>
+                        </label>
+                        <label class="report-field">
+                            <span data-i18n="modal.report.reporterPhone">Telefon</span>
+                            <input type="tel" name="reporter_phone" maxlength="80" required>
+                        </label>
+                        <label class="report-field report-field--wide">
+                            <span data-i18n="modal.report.reporterAddress">Adres zamieszkania</span>
+                            <input type="text" name="reporter_address" maxlength="240" required>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="modal-section">
+                    <label class="modal-label" data-i18n="modal.report.case">Opis sprawy</label>
+                    <div class="report-grid">
+                        <label class="report-field report-field--wide">
+                            <span data-i18n="modal.report.location">Dokładne miejsce pojazdu</span>
+                            <textarea name="location_description" rows="2" maxlength="1200" required></textarea>
+                        </label>
+                        <label class="report-field">
+                            <span data-i18n="modal.report.observedAt">Data i godzina obserwacji</span>
+                            <input type="datetime-local" name="observed_at" required>
+                        </label>
+                        <label class="report-field report-field--wide">
+                            <span data-i18n="modal.report.vehicleDescription">Opis pojazdu lub miejsca</span>
+                            <textarea name="vehicle_description" rows="3" maxlength="2000" required></textarea>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="modal-section">
+                    <label class="modal-label" for="report-photos" data-i18n="modal.report.photos">Zdjęcia z
+                        miejsca</label>
+                    <div class="file-picker">
+                        <input type="file" class="file-picker-input" id="report-photos" name="photos[]"
+                            accept="image/jpeg,image/png,image/webp" multiple>
+                        <label class="file-picker-button" for="report-photos"
+                            data-i18n="modal.report.choosePhotos">Wybierz załączniki do zgłoszenia</label>
+                        <span class="file-picker-summary" data-file-summary-for="report-photos"
+                            data-i18n="filePicker.empty">Nie wybrano plików</span>
+                    </div>
+                    <p class="modal-hint" data-i18n="modal.report.photoHint">0-5 zdjęć JPG, PNG albo WebP, maks. 10 MB
+                        każde.</p>
+                    <p class="modal-hint" id="report-package-extra-photos" hidden></p>
+                </section>
+
+                <div class="report-actions">
+                    <button type="submit" class="btn-download report-submit-btn" id="report-package-submit">
+                        <span data-i18n="modal.report.submit">Generuj zgłoszenie</span>
+                    </button>
+                </div>
+                <p class="modal-hint" id="report-package-status"></p>
+
+                <section class="modal-section report-result" id="report-package-result" hidden>
+                    <label class="report-field">
+                        <span data-i18n="modal.report.recipient">Adresat</span>
+                        <input type="text" id="report-package-recipient" readonly>
+                    </label>
+                    <label class="report-field">
+                        <span data-i18n="modal.report.subject">Temat</span>
+                        <input type="text" id="report-package-subject" readonly>
+                    </label>
+                    <label class="report-field">
+                        <span data-i18n="modal.report.body">Treść maila</span>
+                        <textarea id="report-package-body" rows="10" readonly></textarea>
+                    </label>
+                    <div class="report-result-actions">
+                        <a id="report-package-download" class="btn-download report-download-btn" target="_blank"
+                            rel="noopener">
+                            <span data-i18n="modal.report.download">Pobierz ZIP</span>
+                        </a>
+                        <a id="report-package-pdf" class="btn-download report-download-btn" target="_blank"
+                            rel="noopener">
+                            <span data-i18n="modal.report.downloadPdf">Pobierz PDF</span>
+                        </a>
+                        <button type="button" class="report-copy-btn" onclick="copyReportEmailDraft()"
+                            data-i18n="modal.report.copyDraft">Kopiuj szkic</button>
+                    </div>
+                </section>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── MODAL: POMOC ────────────────────────────────── -->
+    <div class="modal-backdrop" id="modal-help" hidden onclick="closeModal(this)">
+        <div class="modal draggable-modal" onclick="event.stopPropagation()">
+            <div class="modal-header modal-drag-handle">
+                <h2 data-i18n="modal.help.title">Jak korzystać</h2>
+                <button type="button" class="modal-close" onclick="closeModal()" data-i18n-attr="aria-label:icon.close"
+                    aria-label="Zamknij">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ol class="modal-steps">
+                    <li data-i18n="modal.help.step1" data-i18n-html>
+                        <b>Przesuń mapę</b> w miejsce do sprawdzenia (parking, podwórko).<br>
+                        <small>Tip: trzymaj <b>Shift</b> i przeciągnij myszką, żeby szybko wycentrować mapę na
+                            kwadratowym obszarze.</small>
+                    </li>
+                    <li data-i18n="modal.help.step2" data-i18n-html>
+                        Kliknij <b>Skanuj obszar</b> — pobierze ortofotomapy i uruchomi analizę YOLO.
+                    </li>
+                    <li>
+                        <span data-i18n="modal.help.step3" data-i18n-html>Kandydaci pojawią się jako <b>numerowane
+                                piny</b>:</span>
+                        <ul class="modal-legend">
+                            <li><span class="legend-dot" style="background:#10b981"></span> <span
+                                    data-i18n="modal.help.legendHigh" data-i18n-html>zielony — wysoki score (&gt;
+                                    70%)</span></li>
+                            <li><span class="legend-dot" style="background:#f59e0b"></span> <span
+                                    data-i18n="modal.help.legendMid" data-i18n-html>żółty — średni score (55–70%)</span>
+                            </li>
+                            <li><span class="legend-dot" style="background:#ef4444"></span> <span
+                                    data-i18n="modal.help.legendLow">czerwony — niski score</span></li>
+                        </ul>
+                        <span data-i18n="modal.help.step3footer">Kliknij pin, żeby zobaczyć miniatury z historii i linki
+                            do Street View / Google Maps / Mapillary.</span>
+                    </li>
+                    <li data-i18n="modal.help.step4" data-i18n-html>
+                        <b>Ręczna inspekcja punktu</b> — klikając w mapie (bez Shift) otworzysz siatkę miniatur z
+                        każdego roku dla wybranego miejsca.<br>
+                        <small>Działa dopiero po kliknięciu <b>Skanuj obszar</b> i tylko w obrębie ostatnio
+                            analizowanego obszaru.</small>
+                    </li>
+                </ol>
+                <p class="modal-hint modal-data-source" data-i18n="modal.help.dataSource">Dane: WMS Wrocławia +
+                    Geoportal Krajowy WFS/GeoTIFF cache.</p>
+                <div class="modal-footer-links">
+                    <a href="/privacy" data-i18n="footer.privacy">Prywatność</a>
+                    <span class="modal-footer-sep">·</span>
+                    <a href="/report" data-i18n="footer.report">Zgłoś problem</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- i18n (musi być przed app.js, żeby t() i CURRENT_LANG były dostępne) -->
+    <script src="/i18n.js"></script>
+    <script src="/config.js"></script>
+    <script src="/ui.js"></script>
+    <script src="/admin.js"></script>
+    <script src="/map_helpers.js"></script>
+
+    <!-- App logic -->
+    <script src="/app.js"></script>
+</body>
+
+</html>
