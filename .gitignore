@@ -14,6 +14,9 @@ analiza/run_log.json
 analiza/report.html
 *.pyc
 __pycache__/
+.coverage
+.venv-audit/
+node_modules/
 .DS_Store
 settings.json
 .admin_password

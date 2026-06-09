@@ -4,18 +4,37 @@ line-length = 120
 extend-exclude = [
     ".cache",
     ".venv",
+    ".venv-audit",
     "analiza",
     "dane_dla_AI",
+    "node_modules",
     "output",
     "weights",
     "zidentyfikowane_wraki",
 ]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
+select = ["E", "F", "W", "B", "I", "UP", "SIM"]
+ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "app/analyze.py" = ["E402"]
 "analyze.py" = ["E402"]
 "scripts/download_geoportal_krajowy.py" = ["E402"]
 "scripts/download_geoportal_wfs_geotiff.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["app", "core", "scripts"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "analiza/htmlcov"
