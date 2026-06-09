@@ -762,6 +762,121 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self._send_json(400, {"error": str(e)}, include_body=include_body)
 
+    def _handle_wreck_index(self, wreck_id: str, *, include_body: bool = True) -> None:
+        if not self._is_admin() and not wreck_is_public(wreck_id, core_config.WRECKS_DIR):
+            self._send_json(
+                404,
+                {"error": "Nie znaleziono publicznej sprawy pojazdu."},
+                include_body=include_body,
+            )
+            return
+        try:
+            index_path = refresh_wreck_report(wreck_id, core_config.WRECKS_DIR)
+            self._send_file(index_path, "text/html; charset=utf-8", include_body=include_body)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)}, include_body=include_body)
+        except Exception as e:
+            self._send_json(400, {"error": str(e)}, include_body=include_body)
+
+    def _handle_admin_privacy_requests(self) -> None:
+        if not self._require_admin():
+            return
+        query = parse_qs(urlsplit(self.path).query)
+        status_filter = query.get("status", ["all"])[0]
+        try:
+            requests = list_privacy_requests(core_config.PRIVACY_REQUESTS_DIR, status=status_filter)
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+            return
+        self._send_json(200, {"status": "ok", "requests": requests})
+
+    def _handle_photo_retention_status(self) -> None:
+        if not self._require_admin():
+            return
+        self._send_json(200, {"status": "ok", "retention": _photo_retention_snapshot()})
+
+    def _handle_surface_features(self) -> None:
+        query = parse_qs(urlsplit(self.path).query)
+        try:
+            bbox = parse_surface_bbox((query.get("bbox") or [""])[0])
+            self._send_json(200, {"status": "ok", "geojson": surface_features_geojson(bbox)})
+        except ValueError as e:
+            self._send_json(400, {"status": "error", "error": str(e)})
+        except Exception as e:
+            self._send_json(
+                502,
+                {
+                    "status": "error",
+                    "error": str(e),
+                    "geojson": {"type": "FeatureCollection", "features": []},
+                },
+            )
+
+    def _handle_field_photos(self) -> None:
+        photos = list_field_photos(core_config.FIELD_PHOTOS_DIR)
+        if not self._is_admin():
+            photos = [photo for photo in photos if self._public_field_photo_allowed(photo)]
+        self._send_json(200, {"status": "ok", "photos": photos})
+
+    def _handle_report_package_asset(self, route: tuple[str, str, str]) -> None:
+        if not self._require_admin():
+            return
+        wreck_id, package_id, asset = route
+        try:
+            file_path, content_type = report_package_asset(wreck_id, package_id, asset)
+            self._send_file(file_path, content_type)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_public_report_package_asset(self, route: tuple[str, str, str]) -> None:
+        wreck_id, package_id, asset = route
+        query = parse_qs(urlsplit(self.path).query)
+        token = (query.get("token") or [""])[0]
+        try:
+            file_path, content_type = public_report_package_asset(wreck_id, package_id, asset, token)
+            self._send_file(file_path, content_type)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_admin_photo_original(self, route: tuple[str, tuple[str, ...]]) -> None:
+        if not self._require_admin():
+            return
+        scope, ids = route
+        try:
+            if scope == "field":
+                file_path, content_type = field_photo_asset(
+                    ids[0],
+                    core_config.FIELD_PHOTOS_DIR,
+                    "original",
+                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
+                )
+            else:
+                file_path, content_type = wreck_photo_original_asset(ids[0], ids[1], core_config.WRECKS_DIR)
+            self._send_file(file_path, content_type)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_field_photo_asset(self, route: tuple[str, str]) -> None:
+        photo_id, asset = route
+        try:
+            file_path, content_type = field_photo_asset(
+                photo_id,
+                core_config.FIELD_PHOTOS_DIR,
+                asset,  # type: ignore[arg-type]
+                private_dir=core_config.PRIVATE_PHOTOS_DIR,
+            )
+            self._send_file(file_path, content_type, cache_control="public, max-age=300")
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
     def translate_path(self, path: str) -> str:
         request_path = unquote(urlsplit(path).path)
         if request_path == "/":
@@ -798,16 +913,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         wreck_index_wreck_id = self._wreck_index_wreck_id(path)
         if wreck_index_wreck_id:
-            if not self._is_admin() and not wreck_is_public(wreck_index_wreck_id, core_config.WRECKS_DIR):
-                self._send_json(404, {"error": "Nie znaleziono publicznej sprawy pojazdu."}, include_body=False)
-                return
-            try:
-                index_path = refresh_wreck_report(wreck_index_wreck_id, core_config.WRECKS_DIR)
-                self._send_file(index_path, "text/html; charset=utf-8", include_body=False)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)}, include_body=False)
-            except Exception as e:
-                self._send_json(400, {"error": str(e)}, include_body=False)
+            self._handle_wreck_index(wreck_index_wreck_id, include_body=False)
             return
         if path.startswith(f"/{config.WRECKS_ROUTE}/"):
             self._handle_public_wreck_asset(path, include_body=False)
@@ -824,16 +930,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         wreck_index_wreck_id = self._wreck_index_wreck_id(path)
         if wreck_index_wreck_id:
-            if not self._is_admin() and not wreck_is_public(wreck_index_wreck_id, core_config.WRECKS_DIR):
-                self._send_json(404, {"error": "Nie znaleziono publicznej sprawy pojazdu."})
-                return
-            try:
-                index_path = refresh_wreck_report(wreck_index_wreck_id, core_config.WRECKS_DIR)
-                self._send_file(index_path, "text/html; charset=utf-8")
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_wreck_index(wreck_index_wreck_id)
             return
         if path == "/api/health":
             self._handle_health()
@@ -851,21 +948,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._handle_admin_geotiff_cache()
             return
         if path == "/api/admin/privacy-requests":
-            if not self._require_admin():
-                return
-            query = parse_qs(urlsplit(self.path).query)
-            status_filter = query.get("status", ["all"])[0]
-            try:
-                requests = list_privacy_requests(core_config.PRIVACY_REQUESTS_DIR, status=status_filter)
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-                return
-            self._send_json(200, {"status": "ok", "requests": requests})
+            self._handle_admin_privacy_requests()
             return
         if path == "/api/admin/photo-retention":
-            if not self._require_admin():
-                return
-            self._send_json(200, {"status": "ok", "retention": _photo_retention_snapshot()})
+            self._handle_photo_retention_status()
             return
         if path == "/api/settings":
             self._handle_get_settings()
@@ -877,85 +963,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._handle_cadastral_identify()
             return
         if path == "/api/surface/features":
-            query = parse_qs(urlsplit(self.path).query)
-            try:
-                bbox = parse_surface_bbox((query.get("bbox") or [""])[0])
-                self._send_json(200, {"status": "ok", "geojson": surface_features_geojson(bbox)})
-            except ValueError as e:
-                self._send_json(400, {"status": "error", "error": str(e)})
-            except Exception as e:
-                self._send_json(
-                    502, {"status": "error", "error": str(e), "geojson": {"type": "FeatureCollection", "features": []}}
-                )
+            self._handle_surface_features()
             return
         if path == "/api/wrecks":
             self._handle_get_wrecks()
             return
         if path == "/api/field-photos":
-            photos = list_field_photos(core_config.FIELD_PHOTOS_DIR)
-            if not self._is_admin():
-                photos = [photo for photo in photos if self._public_field_photo_allowed(photo)]
-            self._send_json(200, {"status": "ok", "photos": photos})
+            self._handle_field_photos()
             return
         report_package_route = self._report_package_asset_route(path)
         if report_package_route:
-            if not self._require_admin():
-                return
-            wreck_id, package_id, asset = report_package_route
-            try:
-                file_path, content_type = report_package_asset(wreck_id, package_id, asset)
-                self._send_file(file_path, content_type)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_report_package_asset(report_package_route)
             return
         public_report_package_route = self._public_report_package_asset_route(path)
         if public_report_package_route:
-            wreck_id, package_id, asset = public_report_package_route
-            query = parse_qs(urlsplit(self.path).query)
-            token = (query.get("token") or [""])[0]
-            try:
-                file_path, content_type = public_report_package_asset(wreck_id, package_id, asset, token)
-                self._send_file(file_path, content_type)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_public_report_package_asset(public_report_package_route)
             return
         admin_photo_original_route = self._admin_photo_original_route(path)
         if admin_photo_original_route:
-            if not self._require_admin():
-                return
-            scope, ids = admin_photo_original_route
-            try:
-                if scope == "field":
-                    file_path, content_type = field_photo_asset(
-                        ids[0], core_config.FIELD_PHOTOS_DIR, "original", private_dir=core_config.PRIVATE_PHOTOS_DIR
-                    )
-                else:
-                    file_path, content_type = wreck_photo_original_asset(ids[0], ids[1], core_config.WRECKS_DIR)
-                self._send_file(file_path, content_type)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_admin_photo_original(admin_photo_original_route)
             return
         field_photo_asset_route = self._field_photo_asset_route(path)
         if field_photo_asset_route:
-            photo_id, asset = field_photo_asset_route
-            try:
-                file_path, content_type = field_photo_asset(
-                    photo_id,
-                    core_config.FIELD_PHOTOS_DIR,
-                    asset,  # type: ignore[arg-type]
-                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
-                )
-                self._send_file(file_path, content_type, cache_control="public, max-age=300")
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_field_photo_asset(field_photo_asset_route)
             return
         if self.path.startswith("/wms_proxy/"):
             self._handle_wms_proxy()
@@ -1289,6 +1319,429 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         wms_cache.cleanup_tile_cache()
         self._write_body(out_bytes)
 
+    def _report_photo_uploads(self, files: list[UploadedFile]) -> list[ReportPhotoUpload]:
+        return [
+            ReportPhotoUpload(
+                field_name=file.field_name,
+                filename=file.filename,
+                content_type=file.content_type,
+                data=file.data,
+            )
+            for file in files
+            if file.field_name in {"photos", "photos[]"}
+        ]
+
+    def _handle_create_privacy_request(self) -> None:
+        try:
+            data = self._read_json_body()
+            result = create_privacy_request(data, core_config.PRIVACY_REQUESTS_DIR)
+            self._send_json(200, result)
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_run_photo_retention(self) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            dry_run = bool(data.get("dry_run", True))
+            report = _run_photo_retention(dry_run=dry_run, source="admin")
+            self._send_json(200, {"status": "ok", "report": report, "retention": _photo_retention_snapshot()})
+        except RuntimeError as e:
+            self._send_json(409, {"error": str(e)})
+        except Exception as e:
+            self._log_exception("Manual photo retention run failed", e, status=500)
+            self._send_json(500, {"error": str(e), "retention": _photo_retention_snapshot()})
+
+    def _handle_public_report_package(self, wreck_id: str) -> None:
+        try:
+            fields, files = self._read_multipart_form(core_config.MAX_REPORT_PACKAGE_BODY_BYTES)
+            photos = self._report_photo_uploads(files)
+            if photos and not self._require_public_feature(
+                "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
+            ):
+                return
+            result = create_public_report_package(wreck_id, fields, photos, core_config.WRECKS_DIR)
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_report_package(self, wreck_id: str) -> None:
+        if not self._require_admin():
+            return
+        try:
+            fields, files = self._read_multipart_form(core_config.MAX_REPORT_PACKAGE_BODY_BYTES)
+            photos = self._report_photo_uploads(files)
+            result = create_report_package(wreck_id, fields, photos, core_config.WRECKS_DIR)
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_attach_field_photos_to_wreck(self, wreck_id: str) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            photo_ids = data.get("photo_ids") if isinstance(data.get("photo_ids"), list) else []
+            result = attach_field_photos_to_wreck(
+                wreck_id,
+                photo_ids,
+                core_config.FIELD_PHOTOS_DIR,
+                core_config.WRECKS_DIR,
+            )
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_wreck_photo_upload(self, wreck_id: str) -> None:
+        if not self._require_public_feature(
+            "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
+        ):
+            return
+        try:
+            _, files = self._read_multipart_form(core_config.MAX_WRECK_PHOTO_BODY_BYTES)
+            photos = [file for file in files if file.field_name in {"photos", "photos[]", "photo"}]
+            if self._is_admin():
+                result = attach_wreck_photos(wreck_id, photos, core_config.WRECKS_DIR)
+            else:
+                additional_bytes = sum(len(file.data) for file in photos)
+                self._ensure_public_submission_quota(
+                    additional_bytes=additional_bytes,
+                    additional_items=max(1, len(photos)),
+                )
+                result = attach_wreck_photos_for_submission(
+                    wreck_id,
+                    photos,
+                    core_config.WRECKS_DIR,
+                    submission_owner=self._submission_owner(),
+                )
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_create_field_photo(self) -> None:
+        if not self._require_public_feature(
+            "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
+        ):
+            return
+        try:
+            fields, files = self._read_multipart_form(core_config.FIELD_PHOTO_MAX_BODY_BYTES)
+            photo_files = [file for file in files if file.field_name == "photo"]
+            if len(photo_files) != 1:
+                raise ValueError("Dodaj dokładnie jedno zdjęcie w polu 'photo'.")
+            if not self._is_admin():
+                self._ensure_public_submission_quota(
+                    additional_bytes=len(photo_files[0].data),
+                    additional_items=1,
+                )
+            ignore_exif_gps = str(fields.get("ignore_exif_gps") or "").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
+            result = save_field_photo(
+                photo_files[0],
+                core_config.FIELD_PHOTOS_DIR,
+                fallback_lat=fields.get("fallback_lat"),
+                fallback_lon=fields.get("fallback_lon"),
+                ignore_exif_gps=ignore_exif_gps,
+                issue_type=fields.get("issue_type"),
+                private_dir=core_config.PRIVATE_PHOTOS_DIR,
+                submission_owner=None if self._is_admin() else self._submission_owner(),
+            )
+            self._send_json(200, result)
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_save_settings(self) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            settings = save_app_settings(data)
+            self._send_json(200, settings)
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_download(self) -> None:
+        if not self._require_public_feature(
+            "scan_analysis", "Skanowanie i analiza YOLO sa teraz wylaczone dla niezalogowanych."
+        ):
+            return
+        pipeline_token = None
+        try:
+            pressure = pipeline.system_pressure()
+            if pressure["overloaded"]:
+                raise pipeline.HttpJsonError(
+                    503, "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"])
+                )
+            data = self._read_json_body()
+            lat = float(data["lat"])
+            lon = float(data["lon"])
+            width = float(data.get("width", 50))
+            height = float(data.get("height", 50))
+            width = height = max(width, height)
+            if not math.isfinite(width) or width < config.MIN_SCAN_SIZE_M or width > config.MAX_SCAN_SIZE_M:
+                raise ValueError(f"Obszar analizy musi miec maksymalnie {config.MAX_SCAN_SIZE_M:g} m.")
+            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                raise ValueError("Nieprawidlowe wspolrzedne.")
+            pipeline_token = pipeline.start_pipeline(pipeline.client_id(self))
+
+            print(
+                f"📍 Download request: lat={lat}, lon={lon}, area={width}×{height}m, density={core_config.NATIVE_TILE_PX}px/50m"
+            )
+
+            def progress(**payload):
+                current = payload.pop("current", None)
+                total = payload.pop("total", None)
+                percent = (
+                    pipeline.progress_percent(current, total) if current is not None and total is not None else None
+                )
+                _set_download_progress(
+                    status="active",
+                    percent=percent,
+                    current=current,
+                    total=total,
+                    **payload,
+                )
+
+            _set_download_progress(
+                status="active", stage="start", message="Przygotowuję pobieranie ortofotomap", percent=0
+            )
+            results, bbox, wfs_summary = map_downloads.download_maps(lat, lon, width, height, progress=progress)
+            wfs_replaced = [r for r in wfs_summary if r.get("status") == "replaced"]
+            wfs_cache_hits = sum(1 for r in wfs_replaced if r.get("cache") == "hit")
+            wfs_downloaded = sum(1 for r in wfs_replaced if r.get("cache") in {"downloaded", "resumed", "restarted"})
+            wfs_skipped = sum(1 for r in wfs_summary if r.get("status") != "replaced")
+            _set_download_progress(
+                status="done",
+                stage="done",
+                message="Pobieranie zakończone",
+                percent=100,
+            )
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "status": "completed",
+                        "saved": sum(1 for v in results.values() if v.get("status") == "ok"),
+                        "missing": sum(1 for v in results.values() if v.get("status") == "missing"),
+                        "total": len(config.WMS_YEARS),
+                        "wfs_replaced": len(wfs_replaced),
+                        "wfs_cache_hits": wfs_cache_hits,
+                        "wfs_downloaded": wfs_downloaded,
+                        "wfs_skipped": wfs_skipped,
+                        "job_token": pipeline_token,
+                        "bbox": bbox,
+                    }
+                ).encode()
+            )
+
+        except pipeline.HttpJsonError as e:
+            if pipeline_token:
+                pipeline.finish_pipeline(pipeline_token)
+            _set_download_progress(status="error", stage="error", message=e.message, percent=None)
+            self._send_json(e.status, {"error": e.message})
+        except Exception as e:
+            if pipeline_token:
+                pipeline.finish_pipeline(pipeline_token)
+            _set_download_progress(status="error", stage="error", message=str(e), percent=None)
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_inspect(self) -> None:
+        if not self._require_public_feature(
+            "manual_wrecks", "Dodawanie recznych pinezek jest teraz wylaczone dla niezalogowanych."
+        ):
+            return
+        try:
+            data = self._read_json_body()
+            lat = float(data["lat"])
+            lon = float(data["lon"])
+            crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
+
+            custom_dir = config.ANALYSIS_DIR / "custom_crops"
+            ts = int(time.time() * 1000)
+            crops, _metadata = save_scan_crops(
+                lat,
+                lon,
+                config.DOWNLOAD_DATA_DIR,
+                custom_dir,
+                crop_m=crop_m,
+                filename_prefix=f"custom_{ts}_",
+                jpeg_quality=config.INSPECT_JPEG_QUALITY,
+            )
+            self._send_json(
+                200,
+                {
+                    "status": "ok",
+                    "crops": [
+                        {
+                            "year": crop["label"],
+                            "url": f"/{config.ANALYSIS_DIR_NAME}/custom_crops/{crop['file']}",
+                        }
+                        for crop in crops
+                    ],
+                },
+            )
+
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_analyze(self) -> None:
+        if not self._require_public_feature(
+            "scan_analysis", "Skanowanie i analiza YOLO sa teraz wylaczone dla niezalogowanych."
+        ):
+            return
+        pipeline_token = None
+        try:
+            pressure = pipeline.system_pressure()
+            if pressure["overloaded"]:
+                raise pipeline.HttpJsonError(
+                    503, "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"])
+                )
+            data = self._read_json_body()
+            pipeline_token = str(data.get("job_token", "")).strip()
+            if not pipeline_token:
+                raise pipeline.HttpJsonError(409, "Brak tokenu zadania. Uruchom skan od poczatku.")
+            pipeline.advance_pipeline(pipeline_token, pipeline.client_id(self), "analyze")
+
+            cmd = [sys.executable, str(config.ANALYZE_SCRIPT)]
+            model = str(data.get("model", "")).strip()
+            if model:
+                cmd.extend(["--model", model])
+            device = str(data.get("device", "")).strip()
+            if device:
+                if device not in {"auto", "cpu", "mps"}:
+                    raise ValueError("Nieprawidłowe device. Dozwolone: auto, cpu, mps.")
+                cmd.extend(["--device", device])
+            lang = str(data.get("lang", "")).strip()
+            if lang in {"pl", "en"}:
+                cmd.extend(["--lang", lang])
+            try:
+                conf = float(data.get("conf", 0))
+                if 0.05 <= conf <= 0.50:
+                    cmd.extend(["--conf", str(conf)])
+            except (TypeError, ValueError):
+                pass
+            if data.get("fast") is True:
+                cmd.append("--fast")
+            crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
+            cmd.extend(["--crop-m", f"{crop_m:g}"])
+
+            print(
+                f"🧠 Uruchamiam analyze.py... model={model or 'domyślny'} device={device or 'auto'} fast={data.get('fast') is True}"
+            )
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                **subprocess_text_kwargs(),
+                timeout=config.ANALYZE_TIMEOUT_SECONDS,
+            )  # nosec B603
+            stdout = proc.stdout[-config.ANALYZE_STDOUT_TAIL_CHARS :]
+            stderr = proc.stderr[-config.ANALYZE_STDERR_TAIL_CHARS :]
+            candidates = []
+            cand_path = config.ANALYSIS_DIR / "candidates.json"
+            if cand_path.exists():
+                with cand_path.open(encoding="utf-8") as f:
+                    candidates = json.load(f)
+            report_version = _file_asset_version(config.ROOT_DIR / config.ANALYSIS_DIR / "report.html")
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "status": "ok" if proc.returncode == 0 else "error",
+                        "report_url": _versioned_route_url(
+                            f"/{config.ANALYSIS_DIR_NAME}/report.html", report_version
+                        ),
+                        "diagnostics_url": _versioned_route_url(
+                            f"/{config.ANALYSIS_DIR_NAME}/run_log.json", report_version
+                        ),
+                        "candidates": candidates[: config.ANALYZE_MAX_CANDIDATES],
+                        "stdout": stdout,
+                        "stderr": stderr,
+                    }
+                ).encode()
+            )
+            pipeline.finish_pipeline(pipeline_token)
+        except subprocess.TimeoutExpired:
+            pipeline.finish_pipeline(pipeline_token)
+            self._send_json(504, {"error": "Analiza trwała zbyt długo (>20 min)."})
+        except pipeline.HttpJsonError as e:
+            self._send_json(e.status, {"error": e.message})
+        except Exception as e:
+            pipeline.finish_pipeline(pipeline_token)
+            self._log_exception("Analysis pipeline failed", e, status=500)
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_save_wreck(self) -> None:
+        try:
+            data = self._read_json_body()
+            if "rank" in data:
+                if not self._require_public_feature(
+                    "yolo_wrecks", "Dodawanie pinezek z YOLO jest teraz wylaczone dla niezalogowanych."
+                ):
+                    return
+            elif not self._require_public_feature(
+                "manual_wrecks", "Dodawanie recznych pinezek jest teraz wylaczone dla niezalogowanych."
+            ):
+                return
+            review_status = "approved" if self._is_admin() else "pending"
+            submission_owner = None if self._is_admin() else self._submission_owner()
+            if not self._is_admin():
+                self._ensure_public_submission_quota(additional_bytes=0, additional_items=1)
+            if "rank" in data:
+                rank = int(data.get("rank"))
+                if rank <= 0:
+                    raise ValueError("Numer kandydata musi być dodatni.")
+                result = save_wreck_from_rank(
+                    rank,
+                    config.ANALYSIS_DIR,
+                    config.DOWNLOAD_DATA_DIR,
+                    core_config.WRECKS_DIR,
+                    public_review_status=review_status,
+                    submission_owner=submission_owner,
+                )
+            else:
+                crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
+                result = save_manual_wreck(
+                    data.get("lat"),
+                    data.get("lon"),
+                    config.DOWNLOAD_DATA_DIR,
+                    core_config.WRECKS_DIR,
+                    crop_m=crop_m,
+                    public_review_status=review_status,
+                    submission_owner=submission_owner,
+                )
+            self._send_json(200, result)
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
     def do_POST(self):
         request_path = unquote(urlsplit(self.path).path)
         if request_path == "/api/admin/login":
@@ -1298,440 +1751,47 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._handle_admin_logout()
             return
         if request_path == "/api/privacy-requests":
-            try:
-                data = self._read_json_body()
-                result = create_privacy_request(data, core_config.PRIVACY_REQUESTS_DIR)
-                self._send_json(200, result)
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_create_privacy_request()
             return
         if request_path == "/api/admin/photo-retention/run":
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                dry_run = bool(data.get("dry_run", True))
-                report = _run_photo_retention(dry_run=dry_run, source="admin")
-                self._send_json(200, {"status": "ok", "report": report, "retention": _photo_retention_snapshot()})
-            except RuntimeError as e:
-                self._send_json(409, {"error": str(e)})
-            except Exception as e:
-                self._log_exception("Manual photo retention run failed", e, status=500)
-                self._send_json(500, {"error": str(e), "retention": _photo_retention_snapshot()})
+            self._handle_run_photo_retention()
             return
         public_report_package_wreck_id = self._public_report_package_wreck_id(request_path)
         if public_report_package_wreck_id:
-            try:
-                fields, files = self._read_multipart_form(core_config.MAX_REPORT_PACKAGE_BODY_BYTES)
-                photos = [
-                    ReportPhotoUpload(
-                        field_name=file.field_name,
-                        filename=file.filename,
-                        content_type=file.content_type,
-                        data=file.data,
-                    )
-                    for file in files
-                    if file.field_name in {"photos", "photos[]"}
-                ]
-                if photos and not self._require_public_feature(
-                    "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
-                ):
-                    return
-                result = create_public_report_package(
-                    public_report_package_wreck_id, fields, photos, core_config.WRECKS_DIR
-                )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_public_report_package(public_report_package_wreck_id)
             return
         report_package_wreck_id = self._report_package_wreck_id(request_path)
         if report_package_wreck_id:
-            if not self._require_admin():
-                return
-            try:
-                fields, files = self._read_multipart_form(core_config.MAX_REPORT_PACKAGE_BODY_BYTES)
-                photos = [
-                    ReportPhotoUpload(
-                        field_name=file.field_name,
-                        filename=file.filename,
-                        content_type=file.content_type,
-                        data=file.data,
-                    )
-                    for file in files
-                    if file.field_name in {"photos", "photos[]"}
-                ]
-                result = create_report_package(report_package_wreck_id, fields, photos, core_config.WRECKS_DIR)
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_report_package(report_package_wreck_id)
             return
         wreck_field_photo_attach_wreck_id = self._wreck_field_photo_attach_wreck_id(request_path)
         if wreck_field_photo_attach_wreck_id:
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                photo_ids = data.get("photo_ids") if isinstance(data.get("photo_ids"), list) else []
-                result = attach_field_photos_to_wreck(
-                    wreck_field_photo_attach_wreck_id,
-                    photo_ids,
-                    core_config.FIELD_PHOTOS_DIR,
-                    core_config.WRECKS_DIR,
-                )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_attach_field_photos_to_wreck(wreck_field_photo_attach_wreck_id)
             return
         wreck_photo_upload_wreck_id = self._wreck_photo_upload_wreck_id(request_path)
         if wreck_photo_upload_wreck_id:
-            if not self._require_public_feature(
-                "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
-            ):
-                return
-            try:
-                _, files = self._read_multipart_form(core_config.MAX_WRECK_PHOTO_BODY_BYTES)
-                photos = [file for file in files if file.field_name in {"photos", "photos[]", "photo"}]
-                if self._is_admin():
-                    result = attach_wreck_photos(wreck_photo_upload_wreck_id, photos, core_config.WRECKS_DIR)
-                else:
-                    additional_bytes = sum(len(file.data) for file in photos)
-                    self._ensure_public_submission_quota(
-                        additional_bytes=additional_bytes,
-                        additional_items=max(1, len(photos)),
-                    )
-                    result = attach_wreck_photos_for_submission(
-                        wreck_photo_upload_wreck_id,
-                        photos,
-                        core_config.WRECKS_DIR,
-                        submission_owner=self._submission_owner(),
-                    )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_wreck_photo_upload(wreck_photo_upload_wreck_id)
             return
         if request_path == "/api/field-photos":
-            if not self._require_public_feature(
-                "photo_uploads", "Dodawanie zdjec przez niezalogowanych jest teraz wylaczone."
-            ):
-                return
-            try:
-                fields, files = self._read_multipart_form(core_config.FIELD_PHOTO_MAX_BODY_BYTES)
-                photo_files = [file for file in files if file.field_name == "photo"]
-                if len(photo_files) != 1:
-                    raise ValueError("Dodaj dokładnie jedno zdjęcie w polu 'photo'.")
-                if not self._is_admin():
-                    self._ensure_public_submission_quota(
-                        additional_bytes=len(photo_files[0].data),
-                        additional_items=1,
-                    )
-                ignore_exif_gps = str(fields.get("ignore_exif_gps") or "").strip().lower() in {
-                    "1",
-                    "true",
-                    "yes",
-                    "on",
-                }
-                result = save_field_photo(
-                    photo_files[0],
-                    core_config.FIELD_PHOTOS_DIR,
-                    fallback_lat=fields.get("fallback_lat"),
-                    fallback_lon=fields.get("fallback_lon"),
-                    ignore_exif_gps=ignore_exif_gps,
-                    issue_type=fields.get("issue_type"),
-                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
-                    submission_owner=None if self._is_admin() else self._submission_owner(),
-                )
-                self._send_json(200, result)
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_create_field_photo()
             return
         if request_path == "/api/settings":
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                settings = save_app_settings(data)
-                self._send_json(200, settings)
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
-        elif request_path == "/api/download":
-            if not self._require_public_feature(
-                "scan_analysis", "Skanowanie i analiza YOLO sa teraz wylaczone dla niezalogowanych."
-            ):
-                return
-            pipeline_token = None
-            try:
-                pressure = pipeline.system_pressure()
-                if pressure["overloaded"]:
-                    raise pipeline.HttpJsonError(
-                        503, "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"])
-                    )
-                data = self._read_json_body()
-                lat = float(data["lat"])
-                lon = float(data["lon"])
-                width = float(data.get("width", 50))
-                height = float(data.get("height", 50))
-                width = height = max(width, height)
-                if not math.isfinite(width) or width < config.MIN_SCAN_SIZE_M or width > config.MAX_SCAN_SIZE_M:
-                    raise ValueError(f"Obszar analizy musi miec maksymalnie {config.MAX_SCAN_SIZE_M:g} m.")
-                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                    raise ValueError("Nieprawidlowe wspolrzedne.")
-                pipeline_token = pipeline.start_pipeline(pipeline.client_id(self))
-
-                print(
-                    f"📍 Download request: lat={lat}, lon={lon}, area={width}×{height}m, density={core_config.NATIVE_TILE_PX}px/50m"
-                )
-
-                def progress(**payload):
-                    current = payload.pop("current", None)
-                    total = payload.pop("total", None)
-                    percent = (
-                        pipeline.progress_percent(current, total) if current is not None and total is not None else None
-                    )
-                    _set_download_progress(
-                        status="active",
-                        percent=percent,
-                        current=current,
-                        total=total,
-                        **payload,
-                    )
-
-                _set_download_progress(
-                    status="active", stage="start", message="Przygotowuję pobieranie ortofotomap", percent=0
-                )
-                results, bbox, wfs_summary = map_downloads.download_maps(lat, lon, width, height, progress=progress)
-                wfs_replaced = [r for r in wfs_summary if r.get("status") == "replaced"]
-                wfs_cache_hits = sum(1 for r in wfs_replaced if r.get("cache") == "hit")
-                wfs_downloaded = sum(
-                    1 for r in wfs_replaced if r.get("cache") in {"downloaded", "resumed", "restarted"}
-                )
-                wfs_skipped = sum(1 for r in wfs_summary if r.get("status") != "replaced")
-                _set_download_progress(
-                    status="done",
-                    stage="done",
-                    message="Pobieranie zakończone",
-                    percent=100,
-                )
-
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(
-                    json.dumps(
-                        {
-                            "status": "completed",
-                            "saved": sum(1 for v in results.values() if v.get("status") == "ok"),
-                            "missing": sum(1 for v in results.values() if v.get("status") == "missing"),
-                            "total": len(config.WMS_YEARS),
-                            "wfs_replaced": len(wfs_replaced),
-                            "wfs_cache_hits": wfs_cache_hits,
-                            "wfs_downloaded": wfs_downloaded,
-                            "wfs_skipped": wfs_skipped,
-                            "job_token": pipeline_token,
-                            "bbox": bbox,
-                        }
-                    ).encode()
-                )
-
-            except pipeline.HttpJsonError as e:
-                if pipeline_token:
-                    pipeline.finish_pipeline(pipeline_token)
-                _set_download_progress(status="error", stage="error", message=e.message, percent=None)
-                self._send_json(e.status, {"error": e.message})
-            except Exception as e:
-                if pipeline_token:
-                    pipeline.finish_pipeline(pipeline_token)
-                _set_download_progress(status="error", stage="error", message=str(e), percent=None)
-                self._send_json(400, {"error": str(e)})
-        elif request_path == "/api/inspect":
-            if not self._require_public_feature(
-                "manual_wrecks", "Dodawanie recznych pinezek jest teraz wylaczone dla niezalogowanych."
-            ):
-                return
-            try:
-                data = self._read_json_body()
-                lat = float(data["lat"])
-                lon = float(data["lon"])
-                crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
-
-                custom_dir = config.ANALYSIS_DIR / "custom_crops"
-                ts = int(time.time() * 1000)
-                crops, _metadata = save_scan_crops(
-                    lat,
-                    lon,
-                    config.DOWNLOAD_DATA_DIR,
-                    custom_dir,
-                    crop_m=crop_m,
-                    filename_prefix=f"custom_{ts}_",
-                    jpeg_quality=config.INSPECT_JPEG_QUALITY,
-                )
-                self._send_json(
-                    200,
-                    {
-                        "status": "ok",
-                        "crops": [
-                            {
-                                "year": crop["label"],
-                                "url": f"/{config.ANALYSIS_DIR_NAME}/custom_crops/{crop['file']}",
-                            }
-                            for crop in crops
-                        ],
-                    },
-                )
-
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
-        elif request_path == "/api/analyze":
-            if not self._require_public_feature(
-                "scan_analysis", "Skanowanie i analiza YOLO sa teraz wylaczone dla niezalogowanych."
-            ):
-                return
-            pipeline_token = None
-            try:
-                pressure = pipeline.system_pressure()
-                if pressure["overloaded"]:
-                    raise pipeline.HttpJsonError(
-                        503, "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"])
-                    )
-                data = self._read_json_body()
-                pipeline_token = str(data.get("job_token", "")).strip()
-                if not pipeline_token:
-                    raise pipeline.HttpJsonError(409, "Brak tokenu zadania. Uruchom skan od poczatku.")
-                pipeline.advance_pipeline(pipeline_token, pipeline.client_id(self), "analyze")
-
-                cmd = [sys.executable, str(config.ANALYZE_SCRIPT)]
-                model = str(data.get("model", "")).strip()
-                if model:
-                    cmd.extend(["--model", model])
-                device = str(data.get("device", "")).strip()
-                if device:
-                    if device not in {"auto", "cpu", "mps"}:
-                        raise ValueError("Nieprawidłowe device. Dozwolone: auto, cpu, mps.")
-                    cmd.extend(["--device", device])
-                lang = str(data.get("lang", "")).strip()
-                if lang in {"pl", "en"}:
-                    cmd.extend(["--lang", lang])
-                try:
-                    conf = float(data.get("conf", 0))
-                    if 0.05 <= conf <= 0.50:
-                        cmd.extend(["--conf", str(conf)])
-                except (TypeError, ValueError):
-                    pass
-                if data.get("fast") is True:
-                    cmd.append("--fast")
-                crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
-                cmd.extend(["--crop-m", f"{crop_m:g}"])
-
-                print(
-                    f"🧠 Uruchamiam analyze.py... model={model or 'domyślny'} device={device or 'auto'} fast={data.get('fast') is True}"
-                )
-                proc = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    **subprocess_text_kwargs(),
-                    timeout=config.ANALYZE_TIMEOUT_SECONDS,
-                )  # nosec B603
-                stdout = proc.stdout[-config.ANALYZE_STDOUT_TAIL_CHARS :]
-                stderr = proc.stderr[-config.ANALYZE_STDERR_TAIL_CHARS :]
-                candidates = []
-                cand_path = config.ANALYSIS_DIR / "candidates.json"
-                if cand_path.exists():
-                    with cand_path.open(encoding="utf-8") as f:
-                        candidates = json.load(f)
-                report_version = _file_asset_version(config.ROOT_DIR / config.ANALYSIS_DIR / "report.html")
-
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(
-                    json.dumps(
-                        {
-                            "status": "ok" if proc.returncode == 0 else "error",
-                            "report_url": _versioned_route_url(
-                                f"/{config.ANALYSIS_DIR_NAME}/report.html", report_version
-                            ),
-                            "diagnostics_url": _versioned_route_url(
-                                f"/{config.ANALYSIS_DIR_NAME}/run_log.json", report_version
-                            ),
-                            "candidates": candidates[: config.ANALYZE_MAX_CANDIDATES],
-                            "stdout": stdout,
-                            "stderr": stderr,
-                        }
-                    ).encode()
-                )
-                pipeline.finish_pipeline(pipeline_token)
-            except subprocess.TimeoutExpired:
-                pipeline.finish_pipeline(pipeline_token)
-                self._send_json(504, {"error": "Analiza trwała zbyt długo (>20 min)."})
-            except pipeline.HttpJsonError as e:
-                self._send_json(e.status, {"error": e.message})
-            except Exception as e:
-                pipeline.finish_pipeline(pipeline_token)
-                self._log_exception("Analysis pipeline failed", e, status=500)
-                self._send_json(500, {"error": str(e)})
-        elif request_path == "/api/wrecks":
-            try:
-                data = self._read_json_body()
-                if "rank" in data:
-                    if not self._require_public_feature(
-                        "yolo_wrecks", "Dodawanie pinezek z YOLO jest teraz wylaczone dla niezalogowanych."
-                    ):
-                        return
-                elif not self._require_public_feature(
-                    "manual_wrecks", "Dodawanie recznych pinezek jest teraz wylaczone dla niezalogowanych."
-                ):
-                    return
-                review_status = "approved" if self._is_admin() else "pending"
-                submission_owner = None if self._is_admin() else self._submission_owner()
-                if not self._is_admin():
-                    self._ensure_public_submission_quota(additional_bytes=0, additional_items=1)
-                if "rank" in data:
-                    rank = int(data.get("rank"))
-                    if rank <= 0:
-                        raise ValueError("Numer kandydata musi być dodatni.")
-                    result = save_wreck_from_rank(
-                        rank,
-                        config.ANALYSIS_DIR,
-                        config.DOWNLOAD_DATA_DIR,
-                        core_config.WRECKS_DIR,
-                        public_review_status=review_status,
-                        submission_owner=submission_owner,
-                    )
-                else:
-                    crop_m = validate_crop_m(data.get("cropM", core_config.REVIEW_CROP_M))
-                    result = save_manual_wreck(
-                        data.get("lat"),
-                        data.get("lon"),
-                        config.DOWNLOAD_DATA_DIR,
-                        core_config.WRECKS_DIR,
-                        crop_m=crop_m,
-                        public_review_status=review_status,
-                        submission_owner=submission_owner,
-                    )
-                self._send_json(200, result)
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
-        else:
-            self.send_response(404)
-            self.end_headers()
+            self._handle_save_settings()
+            return
+        if request_path == "/api/download":
+            self._handle_download()
+            return
+        if request_path == "/api/inspect":
+            self._handle_inspect()
+            return
+        if request_path == "/api/analyze":
+            self._handle_analyze()
+            return
+        if request_path == "/api/wrecks":
+            self._handle_save_wreck()
+            return
+        self.send_response(404)
+        self.end_headers()
 
 
 def main() -> None:
