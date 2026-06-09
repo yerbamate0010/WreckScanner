@@ -5,9 +5,11 @@ import math
 import shutil
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import requests
@@ -89,10 +91,8 @@ def cleanup_old_data() -> None:
     if data_dir.is_dir():
         for path in data_dir.iterdir():
             if path.name.endswith(".png") or path.name == "metadata.json":
-                try:
+                with suppress(OSError):
                     path.unlink()
-                except OSError:
-                    pass
             elif path.name == ".temp" and path.is_dir():
                 shutil.rmtree(path, ignore_errors=True)
     if config.ANALYSIS_DIR.is_dir():

@@ -6,7 +6,7 @@ import json
 import math
 import os
 import secrets
-import subprocess
+import subprocess  # nosec B404
 import sys
 import threading
 import time
@@ -221,8 +221,8 @@ def _admin_enabled() -> bool:
 
 
 def _admin_signature(payload: str, password: str) -> str:
-    key = f"{config.ADMIN_SESSION_SECRET}:{password}".encode("utf-8")
-    return hmac.new(key, payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    key = f"{config.ADMIN_SESSION_SECRET}:{password}".encode()
+    return hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
 
 
 def _make_admin_token(password: str) -> str:
@@ -367,9 +367,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _field_photo_asset_route(self, request_path: str) -> tuple[str, str] | None:
         parts = [part for part in request_path.strip("/").split("/") if part]
-        if len(parts) == 4 and parts[0] == "api" and parts[1] == "field-photos":
-            if parts[3] in {"public-image", "public-thumb"}:
-                return parts[2], parts[3]
+        if len(parts) == 4 and parts[0] == "api" and parts[1] == "field-photos" and parts[3] in {
+            "public-image",
+            "public-thumb",
+        }:
+            return parts[2], parts[3]
         return None
 
     def _admin_photo_original_route(self, request_path: str) -> tuple[str, tuple[str, ...]] | None:
@@ -446,7 +448,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _submission_owner(self) -> str:
         ip = str((self.client_address or ["unknown"])[0])
         ua = str(self.headers.get("User-Agent") or "")
-        digest = hashlib.sha256(f"{ip}|{ua}".encode("utf-8")).hexdigest()[:24]
+        digest = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:24]
         return f"public:{digest}"
 
     def _ensure_public_submission_quota(self, *, additional_bytes: int = 0, additional_items: int = 1) -> None:
@@ -529,9 +531,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self._is_admin():
             return True
         layer_settings = self._public_layer_settings()
-        if str(photo.get("public_review_status") or "approved") == "pending":
-            if not layer_settings.get("field_photo_pending", True):
-                return False
+        if str(photo.get("public_review_status") or "approved") == "pending" and not layer_settings.get(
+            "field_photo_pending", True
+        ):
+            return False
         issue_type = str(photo.get("issue_type") or "vehicle")
         key = _FIELD_PHOTO_PUBLIC_LAYER_KEYS.get(issue_type, "field_photo_vehicle")
         return layer_settings.get(key, True)
@@ -1584,7 +1587,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     text=True,
                     **subprocess_text_kwargs(),
                     timeout=config.ANALYZE_TIMEOUT_SECONDS,
-                )
+                )  # nosec B603
                 stdout = proc.stdout[-config.ANALYZE_STDOUT_TAIL_CHARS :]
                 stderr = proc.stderr[-config.ANALYZE_STDERR_TAIL_CHARS :]
                 candidates = []

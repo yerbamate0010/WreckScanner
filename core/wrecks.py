@@ -16,8 +16,8 @@ from urllib.parse import quote
 from PIL import Image, UnidentifiedImageError
 
 from core import config
-from core.map_crops import save_scan_crops
 from core.geo import external_map_links, meters_between
+from core.map_crops import save_scan_crops
 from core.photo_privacy import (
     REVIEW_STATUSES,
     ensure_review_fields,

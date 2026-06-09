@@ -6,7 +6,7 @@ import ast
 import json
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -403,7 +403,7 @@ def tool_info(command: str, *version_args: str, module: str | None = None) -> di
     else:
         return {"command": command, "available": False}
     try:
-        completed = subprocess.run(args, capture_output=True, text=True, timeout=5, check=False)
+        completed = subprocess.run(args, capture_output=True, text=True, timeout=5, check=False)  # nosec B603
     except (OSError, subprocess.SubprocessError) as exc:
         return {"command": command, "available": True, "path": args[0], "error": str(exc)}
     output = (completed.stdout or completed.stderr).strip().splitlines()

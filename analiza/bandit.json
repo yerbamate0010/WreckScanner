@@ -1,19 +1,19 @@
 {
   "errors": [],
-  "generated_at": "2026-06-09T17:06:50Z",
+  "generated_at": "2026-06-09T17:18:07Z",
   "metrics": {
     "_totals": {
-      "CONFIDENCE.HIGH": 6,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 3,
+      "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 9,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 10597,
+      "loc": 10599,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 5
     },
     "app/__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -70,28 +70,28 @@
     "app/pipeline.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 3,
+      "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 3,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 138,
+      "loc": 140,
       "nosec": 0,
       "skipped_tests": 0
     },
     "app/server.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 2,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1570,
+      "loc": 1573,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 2
     },
     "app/wms_cache.py": {
       "CONFIDENCE.HIGH": 0,
@@ -146,17 +146,17 @@
       "skipped_tests": 0
     },
     "core/data_backup.py": {
-      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 216,
+      "loc": 217,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 1
     },
     "core/data_diagnostics.py": {
       "CONFIDENCE.HIGH": 0,
@@ -172,12 +172,12 @@
       "skipped_tests": 0
     },
     "core/detection.py": {
-      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 167,
@@ -336,7 +336,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 575,
+      "loc": 572,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -349,7 +349,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 18,
+      "loc": 17,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -484,17 +484,17 @@
       "skipped_tests": 0
     },
     "scripts/diagnose_architecture.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 2,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 524,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 2
     },
     "scripts/diagnose_data.py": {
       "CONFIDENCE.HIGH": 0,
@@ -549,214 +549,5 @@
       "skipped_tests": 0
     }
   },
-  "results": [
-    {
-      "code": "20     \"status\": \"idle\",\n21     \"token\": None,\n22     \"client\": None,\n23     \"stage\": None,\n24     \"started_at\": None,\n25     \"updated_at\": None,\n26 }\n27 \n28 \n29 def load_average() -> tuple[float | None, float | None]:\n",
-      "col_offset": 4,
-      "end_col_offset": 11,
-      "filename": "app/pipeline.py",
-      "issue_confidence": "MEDIUM",
-      "issue_cwe": {
-        "id": 259,
-        "link": "https://cwe.mitre.org/data/definitions/259.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Possible hardcoded password: 'None'",
-      "line_number": 21,
-      "line_range": [
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
-      "test_id": "B105",
-      "test_name": "hardcoded_password_string"
-    },
-    {
-      "code": "92             \"status\": \"idle\",\n93             \"token\": None,\n94             \"client\": None,\n95             \"stage\": None,\n96             \"started_at\": None,\n97             \"updated_at\": now,\n98         }\n99     )\n100 \n101 \n",
-      "col_offset": 12,
-      "end_col_offset": 19,
-      "filename": "app/pipeline.py",
-      "issue_confidence": "MEDIUM",
-      "issue_cwe": {
-        "id": 259,
-        "link": "https://cwe.mitre.org/data/definitions/259.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Possible hardcoded password: 'None'",
-      "line_number": 93,
-      "line_range": [
-        91,
-        92,
-        93,
-        94,
-        95,
-        96,
-        97,
-        98
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
-      "test_id": "B105",
-      "test_name": "hardcoded_password_string"
-    },
-    {
-      "code": "151                 \"status\": \"idle\",\n152                 \"token\": None,\n153                 \"client\": None,\n154                 \"stage\": None,\n155                 \"started_at\": None,\n156                 \"updated_at\": time.time(),\n157             }\n158         )\n159 \n160 \n",
-      "col_offset": 16,
-      "end_col_offset": 23,
-      "filename": "app/pipeline.py",
-      "issue_confidence": "MEDIUM",
-      "issue_cwe": {
-        "id": 259,
-        "link": "https://cwe.mitre.org/data/definitions/259.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Possible hardcoded password: 'None'",
-      "line_number": 152,
-      "line_range": [
-        150,
-        151,
-        152,
-        153,
-        154,
-        155,
-        156,
-        157
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
-      "test_id": "B105",
-      "test_name": "hardcoded_password_string"
-    },
-    {
-      "code": "8 import secrets\n9 import subprocess\n10 import sys\n",
-      "col_offset": 0,
-      "end_col_offset": 17,
-      "filename": "app/server.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Consider possible security implications associated with the subprocess module.",
-      "line_number": 9,
-      "line_range": [
-        9
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
-      "test_id": "B404",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "1580                 )\n1581                 proc = subprocess.run(\n1582                     cmd,\n1583                     capture_output=True,\n1584                     text=True,\n1585                     **subprocess_text_kwargs(),\n1586                     timeout=config.ANALYZE_TIMEOUT_SECONDS,\n1587                 )\n1588                 stdout = proc.stdout[-config.ANALYZE_STDOUT_TAIL_CHARS :]\n",
-      "col_offset": 23,
-      "end_col_offset": 17,
-      "filename": "app/server.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 1581,
-      "line_range": [
-        1581,
-        1582,
-        1583,
-        1584,
-        1585,
-        1586,
-        1587
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
-      "test_id": "B603",
-      "test_name": "subprocess_without_shell_equals_true"
-    },
-    {
-      "code": "4 import os\n5 import subprocess\n6 from dataclasses import dataclass\n",
-      "col_offset": 0,
-      "end_col_offset": 17,
-      "filename": "core/data_backup.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Consider possible security implications associated with the subprocess module.",
-      "line_number": 5,
-      "line_range": [
-        5
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
-      "test_id": "B404",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "37             return \"mps\"\n38     except Exception:\n39         pass\n40     return \"cpu\"\n",
-      "col_offset": 4,
-      "end_col_offset": 12,
-      "filename": "core/detection.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 703,
-        "link": "https://cwe.mitre.org/data/definitions/703.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Try, Except, Pass detected.",
-      "line_number": 38,
-      "line_range": [
-        38,
-        39
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
-      "test_id": "B110",
-      "test_name": "try_except_pass"
-    },
-    {
-      "code": "8 import shutil\n9 import subprocess\n10 import sys\n",
-      "col_offset": 0,
-      "end_col_offset": 17,
-      "filename": "scripts/diagnose_architecture.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Consider possible security implications associated with the subprocess module.",
-      "line_number": 9,
-      "line_range": [
-        9
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
-      "test_id": "B404",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "405     try:\n406         completed = subprocess.run(args, capture_output=True, text=True, timeout=5, check=False)\n407     except (OSError, subprocess.SubprocessError) as exc:\n",
-      "col_offset": 20,
-      "end_col_offset": 96,
-      "filename": "scripts/diagnose_architecture.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 406,
-      "line_range": [
-        406
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
-      "test_id": "B603",
-      "test_name": "subprocess_without_shell_equals_true"
-    }
-  ]
+  "results": []
 }
