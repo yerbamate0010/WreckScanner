@@ -13,6 +13,8 @@ Branch: `audit/diagnostics-and-quality`
   selected server-side exceptions.
 - Extracted GET and POST route handlers from `Handler.do_GET` and `Handler.do_POST`
   without changing API/UI contracts.
+- Extracted DELETE and PATCH route handlers from `Handler.do_DELETE` and
+  `Handler.do_PATCH`; both are now small A-level routers.
 - Created and used local `.venv-audit/`; no global packages, secrets, deploy config, data migrations, or service restarts.
 
 ## Reports
@@ -41,7 +43,8 @@ Branch: `audit/diagnostics-and-quality`
 - Bandit: 0 findings. The XML parser, SHA1, subprocess, and false-positive sentinel findings are resolved.
 - pip-audit: 0 known vulnerabilities after upgrading `.venv-audit` pip to 26.1.2.
 - Radon: average complexity B; `Handler.do_GET` improved from F(48) to D(23), and
-  `Handler.do_POST` improved from F(108) to C(15). Several D hotspots remain.
+  `Handler.do_POST` improved from F(108) to C(15). `Handler.do_DELETE` and
+  `Handler.do_PATCH` are now A(5). Several D hotspots remain.
 - Vulture: no high-confidence dead code at `--min-confidence 80`.
 - Data diagnostics: OK, 0 errors/warnings/info. It reports 149 old field-photo records without `issue_type`; no data migration was performed.
 - Frontend: blocked in this environment because `node`, `npm`, and `npx` are not installed.
@@ -50,9 +53,9 @@ Branch: `audit/diagnostics-and-quality`
 
 1. Continue reducing risk in `app/server.py` before broad refactors.
    The first request-id/logging pass is complete, `Handler.do_GET` is now D(23), and
-   `Handler.do_POST` is now C(15). The next server step should focus on the remaining
-   D-level handlers (`_handle_admin_photos`, `do_PATCH`, `do_DELETE`, `_handle_download`)
-   in small behavior-preserving batches.
+   `Handler.do_POST` is now C(15). `Handler.do_DELETE` and `Handler.do_PATCH` are now
+   A(5). The next server step should focus on the remaining D-level handlers
+   (`_handle_admin_photos`, `_handle_download`) in small behavior-preserving batches.
 
 2. Add tests around low-coverage critical paths.
    Coverage is weak in `app/map_downloads.py` (13%), `core/vision.py` (30%), `core/scoring.py` (35%), `core/detection.py` (0%), and `app/analyze.py` (0%). Prefer lightweight tests with fake models/images and no GPU dependency.

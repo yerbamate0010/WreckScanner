@@ -466,6 +466,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return parts[3]
         return None
 
+    def _field_photo_location_route(self, request_path: str) -> str | None:
+        parts = [part for part in request_path.strip("/").split("/") if part]
+        if len(parts) == 4 and parts[0] == "api" and parts[1] == "field-photos" and parts[3] == "location":
+            return parts[2]
+        return None
+
+    def _admin_privacy_request_route(self, request_path: str) -> str | None:
+        parts = [part for part in request_path.strip("/").split("/") if part]
+        if len(parts) == 4 and parts[0] == "api" and parts[1] == "admin" and parts[2] == "privacy-requests":
+            return parts[3]
+        return None
+
     def _report_package_asset_route(self, request_path: str) -> tuple[str, str, str] | None:
         parts = [part for part in request_path.strip("/").split("/") if part]
         if len(parts) == 5 and parts[0] == "api" and parts[1] == "report-packages" and parts[4] in {"zip", "pdf"}:
@@ -995,174 +1007,191 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def _handle_delete_admin_photo(self, route: tuple[str, tuple[str, ...]]) -> None:
+        if not self._require_admin():
+            return
+        try:
+            scope, ids = route
+            if scope == "field":
+                result = delete_field_photo(
+                    ids[0],
+                    core_config.FIELD_PHOTOS_DIR,
+                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
+                )
+            else:
+                result = delete_wreck_photo(ids[0], ids[1], core_config.WRECKS_DIR)
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_delete_geotiff_cache_file(self, request_path: str) -> None:
+        if not self._require_admin():
+            return
+        file_name = request_path.removeprefix("/api/admin/geotiff-cache/").strip("/")
+        if not file_name or "/" in file_name:
+            self._send_json(400, {"error": "Nieprawidłowa nazwa pliku GeoTIFF."})
+            return
+        try:
+            self._send_json(200, map_downloads.delete_geotiff_cache_file(file_name))
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_delete_field_photo(self, request_path: str) -> None:
+        if not self._require_admin():
+            return
+        photo_id = request_path.removeprefix("/api/field-photos/").strip("/")
+        if not photo_id or "/" in photo_id:
+            self._send_json(400, {"error": "Nieprawidłowy identyfikator zdjęcia."})
+            return
+        try:
+            result = delete_field_photo(
+                photo_id,
+                core_config.FIELD_PHOTOS_DIR,
+                private_dir=core_config.PRIVATE_PHOTOS_DIR,
+            )
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_delete_wreck(self, request_path: str) -> None:
+        if not self._require_admin():
+            return
+        wreck_id = request_path.removeprefix("/api/wrecks/").strip("/")
+        if not wreck_id or "/" in wreck_id:
+            self._send_json(400, {"error": "Nieprawidłowy identyfikator sprawy pojazdu."})
+            return
+        try:
+            result = delete_wreck(wreck_id, core_config.WRECKS_DIR)
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
     def do_DELETE(self):
         request_path = unquote(urlsplit(self.path).path)
         admin_photo_delete_route = self._admin_photo_delete_route(request_path)
         if admin_photo_delete_route:
-            if not self._require_admin():
-                return
-            try:
-                scope, ids = admin_photo_delete_route
-                if scope == "field":
-                    result = delete_field_photo(
-                        ids[0], core_config.FIELD_PHOTOS_DIR, private_dir=core_config.PRIVATE_PHOTOS_DIR
-                    )
-                else:
-                    result = delete_wreck_photo(ids[0], ids[1], core_config.WRECKS_DIR)
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_delete_admin_photo(admin_photo_delete_route)
             return
 
         if request_path.startswith("/api/admin/geotiff-cache/"):
-            if not self._require_admin():
-                return
-            file_name = request_path.removeprefix("/api/admin/geotiff-cache/").strip("/")
-            if not file_name or "/" in file_name:
-                self._send_json(400, {"error": "Nieprawidłowa nazwa pliku GeoTIFF."})
-                return
-            try:
-                self._send_json(200, map_downloads.delete_geotiff_cache_file(file_name))
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except ValueError as e:
-                self._send_json(400, {"error": str(e)})
-            except Exception as e:
-                self._send_json(500, {"error": str(e)})
+            self._handle_delete_geotiff_cache_file(request_path)
             return
 
         if request_path.startswith("/api/field-photos/"):
-            if not self._require_admin():
-                return
-            photo_id = request_path.removeprefix("/api/field-photos/").strip("/")
-            if not photo_id or "/" in photo_id:
-                self._send_json(400, {"error": "Nieprawidłowy identyfikator zdjęcia."})
-                return
-            try:
-                result = delete_field_photo(
-                    photo_id, core_config.FIELD_PHOTOS_DIR, private_dir=core_config.PRIVATE_PHOTOS_DIR
-                )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_delete_field_photo(request_path)
             return
 
         if request_path.startswith("/api/wrecks/"):
-            if not self._require_admin():
-                return
-            wreck_id = request_path.removeprefix("/api/wrecks/").strip("/")
-            if not wreck_id or "/" in wreck_id:
-                self.send_response(400)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Nieprawidłowy identyfikator sprawy pojazdu."}).encode())
-                return
-            try:
-                result = delete_wreck(wreck_id, core_config.WRECKS_DIR)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode())
-            except FileNotFoundError as e:
-                self.send_response(404)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
-            except Exception as e:
-                self.send_response(400)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._handle_delete_wreck(request_path)
             return
 
         self.send_response(404)
         self.end_headers()
 
-    def do_PATCH(self):
-        request_path = unquote(urlsplit(self.path).path)
-        parts = [part for part in request_path.strip("/").split("/") if part]
-        admin_wreck_review_route = self._admin_wreck_review_route(request_path)
-        if admin_wreck_review_route:
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                result = review_wreck(
-                    admin_wreck_review_route,
+    def _handle_review_wreck(self, wreck_id: str) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            result = review_wreck(
+                wreck_id,
+                core_config.WRECKS_DIR,
+                status=data.get("public_review_status"),
+            )
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_review_photo(self, route: tuple[str, tuple[str, ...]]) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            scope, ids = route
+            if scope == "field":
+                result = review_field_photo(
+                    ids[0],
+                    core_config.FIELD_PHOTOS_DIR,
+                    status=data.get("public_review_status"),
+                    redactions=data.get("redactions") or [],
+                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
+                )
+            else:
+                result = review_wreck_photo(
+                    ids[0],
+                    ids[1],
                     core_config.WRECKS_DIR,
                     status=data.get("public_review_status"),
+                    redactions=data.get("redactions") or [],
                 )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_update_field_photo_location(self, photo_id: str) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            result = update_field_photo_location(
+                photo_id,
+                core_config.FIELD_PHOTOS_DIR,
+                lat=data.get("lat"),
+                lon=data.get("lon"),
+                private_dir=core_config.PRIVATE_PHOTOS_DIR,
+            )
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def _handle_update_privacy_request(self, request_id: str) -> None:
+        if not self._require_admin():
+            return
+        try:
+            data = self._read_json_body()
+            result = update_privacy_request(request_id, data, core_config.PRIVACY_REQUESTS_DIR)
+            self._send_json(200, result)
+        except FileNotFoundError as e:
+            self._send_json(404, {"error": str(e)})
+        except Exception as e:
+            self._send_json(400, {"error": str(e)})
+
+    def do_PATCH(self):
+        request_path = unquote(urlsplit(self.path).path)
+        admin_wreck_review_route = self._admin_wreck_review_route(request_path)
+        if admin_wreck_review_route:
+            self._handle_review_wreck(admin_wreck_review_route)
             return
 
         admin_photo_review_route = self._admin_photo_review_route(request_path)
         if admin_photo_review_route:
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                scope, ids = admin_photo_review_route
-                if scope == "field":
-                    result = review_field_photo(
-                        ids[0],
-                        core_config.FIELD_PHOTOS_DIR,
-                        status=data.get("public_review_status"),
-                        redactions=data.get("redactions") or [],
-                        private_dir=core_config.PRIVATE_PHOTOS_DIR,
-                    )
-                else:
-                    result = review_wreck_photo(
-                        ids[0],
-                        ids[1],
-                        core_config.WRECKS_DIR,
-                        status=data.get("public_review_status"),
-                        redactions=data.get("redactions") or [],
-                    )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+            self._handle_review_photo(admin_photo_review_route)
             return
 
-        if len(parts) == 4 and parts[0] == "api" and parts[1] == "field-photos" and parts[3] == "location":
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                result = update_field_photo_location(
-                    parts[2],
-                    core_config.FIELD_PHOTOS_DIR,
-                    lat=data.get("lat"),
-                    lon=data.get("lon"),
-                    private_dir=core_config.PRIVATE_PHOTOS_DIR,
-                )
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+        field_photo_location_route = self._field_photo_location_route(request_path)
+        if field_photo_location_route:
+            self._handle_update_field_photo_location(field_photo_location_route)
             return
 
-        if len(parts) == 4 and parts[0] == "api" and parts[1] == "admin" and parts[2] == "privacy-requests":
-            if not self._require_admin():
-                return
-            try:
-                data = self._read_json_body()
-                result = update_privacy_request(parts[3], data, core_config.PRIVACY_REQUESTS_DIR)
-                self._send_json(200, result)
-            except FileNotFoundError as e:
-                self._send_json(404, {"error": str(e)})
-            except Exception as e:
-                self._send_json(400, {"error": str(e)})
+        admin_privacy_request_route = self._admin_privacy_request_route(request_path)
+        if admin_privacy_request_route:
+            self._handle_update_privacy_request(admin_privacy_request_route)
             return
 
         self.send_response(404)
