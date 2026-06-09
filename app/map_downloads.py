@@ -278,7 +278,17 @@ def apply_wfs_geotiff_replacements(
                     cache_report=geotiff_cache_report(config.WFS_GEOTIFF_CACHE_DIR),
                 )
 
-        def on_download_progress(done, total, *, resume_from=0, resumed=False, restarted=False):
+        def on_download_progress(
+            done,
+            total,
+            *,
+            resume_from=0,
+            resumed=False,
+            restarted=False,
+            selected=selected,
+            tif_path=tif_path,
+            year=year,
+        ):
             effective_total = total or int((selected.file_size_mb or 0) * BYTES_PER_MIB)
             effective_total = max(effective_total, done)
             sheet_name = selected.godlo or tif_path.name

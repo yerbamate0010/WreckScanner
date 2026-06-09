@@ -111,12 +111,13 @@ def _evidence_id(candidate: dict[str, Any], metadata: dict[str, Any]) -> str:
         "years": metadata.get("years"),
     }
     raw = json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
-    return hashlib.sha1(raw).hexdigest()[:14]
+    return hashlib.sha1(raw, usedforsecurity=False).hexdigest()[:14]
 
 
 def _manual_evidence_id(lat: float, lon: float, created_at: str) -> str:
     payload = f"{lat:.8f}:{lon:.8f}:{created_at}:{secrets.token_urlsafe(8)}"
-    return f"manual_{hashlib.sha1(payload.encode('utf-8')).hexdigest()[:14]}"
+    digest = hashlib.sha1(payload.encode("utf-8"), usedforsecurity=False).hexdigest()[:14]
+    return f"manual_{digest}"
 
 
 def _links(lat: float, lon: float) -> dict[str, str]:
@@ -641,7 +642,10 @@ def delete_wreck(wreck_id: str, wrecks_dir: Path) -> dict[str, Any]:
 
 def _wreck_photo_id(upload: UploadedFile) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    digest = hashlib.sha1(f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode()).hexdigest()[:8]
+    digest = hashlib.sha1(
+        f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:8]
     return f"photo_{stamp}_{digest}"
 
 

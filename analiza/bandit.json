@@ -1,17 +1,17 @@
 {
   "errors": [],
-  "generated_at": "2026-06-09T16:46:26Z",
+  "generated_at": "2026-06-09T17:06:50Z",
   "metrics": {
     "_totals": {
-      "CONFIDENCE.HIGH": 16,
+      "CONFIDENCE.HIGH": 6,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 3,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 6,
-      "SEVERITY.LOW": 11,
-      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 9,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 10576,
+      "loc": 10597,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -63,7 +63,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 569,
+      "loc": 579,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -211,15 +211,15 @@
       "skipped_tests": 0
     },
     "core/field_photos.py": {
-      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 441,
+      "loc": 444,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -289,28 +289,28 @@
       "skipped_tests": 0
     },
     "core/privacy_requests.py": {
-      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 120,
+      "loc": 123,
       "nosec": 0,
       "skipped_tests": 0
     },
     "core/report_packages.py": {
-      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 681,
+      "loc": 682,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -458,15 +458,15 @@
       "skipped_tests": 0
     },
     "core/wrecks.py": {
-      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 3,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1051,
+      "loc": 1055,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -510,26 +510,26 @@
       "skipped_tests": 0
     },
     "scripts/download_geoportal_krajowy.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 141,
       "nosec": 0,
       "skipped_tests": 0
     },
     "scripts/download_geoportal_wfs_geotiff.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 551,
       "nosec": 0,
@@ -719,128 +719,6 @@
       "test_name": "try_except_pass"
     },
     {
-      "code": "218     stamp = _now_utc().strftime(\"%Y%m%dT%H%M%SZ\")\n219     digest = hashlib.sha1(f\"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}\".encode()).hexdigest()[:8]\n220     return f\"photo_{stamp}_{digest}\"\n",
-      "col_offset": 13,
-      "end_col_offset": 103,
-      "filename": "core/field_photos.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 219,
-      "line_range": [
-        219
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "26 def _request_id(created_at: str, email: str) -> str:\n27     digest = hashlib.sha1(f\"{created_at}:{email}:{secrets.token_urlsafe(12)}\".encode(\"utf-8\")).hexdigest()[:10]\n28     stamp = created_at.replace(\"-\", \"\").replace(\":\", \"\").removesuffix(\"Z\")\n",
-      "col_offset": 13,
-      "end_col_offset": 94,
-      "filename": "core/privacy_requests.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 27,
-      "line_range": [
-        27
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "207     stamp = _now_utc().strftime(\"%Y%m%dT%H%M%SZ\")\n208     digest = hashlib.sha1(\n209         f\"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}\".encode(\"utf-8\")\n210     ).hexdigest()[:8]\n211     return f\"report_{stamp}_{digest}\"\n",
-      "col_offset": 13,
-      "end_col_offset": 5,
-      "filename": "core/report_packages.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 208,
-      "line_range": [
-        208,
-        209,
-        210
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "113     raw = json.dumps(payload, sort_keys=True, ensure_ascii=False).encode(\"utf-8\")\n114     return hashlib.sha1(raw).hexdigest()[:14]\n115 \n",
-      "col_offset": 11,
-      "end_col_offset": 28,
-      "filename": "core/wrecks.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 114,
-      "line_range": [
-        114
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "118     payload = f\"{lat:.8f}:{lon:.8f}:{created_at}:{secrets.token_urlsafe(8)}\"\n119     return f\"manual_{hashlib.sha1(payload.encode('utf-8')).hexdigest()[:14]}\"\n120 \n",
-      "col_offset": 21,
-      "end_col_offset": 58,
-      "filename": "core/wrecks.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 119,
-      "line_range": [
-        119
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "643     stamp = datetime.now(timezone.utc).strftime(\"%Y%m%dT%H%M%SZ\")\n644     digest = hashlib.sha1(f\"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}\".encode()).hexdigest()[:8]\n645     return f\"photo_{stamp}_{digest}\"\n",
-      "col_offset": 13,
-      "end_col_offset": 103,
-      "filename": "core/wrecks.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak SHA1 hash for security. Consider usedforsecurity=False",
-      "line_number": 644,
-      "line_range": [
-        644
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
       "code": "8 import shutil\n9 import subprocess\n10 import sys\n",
       "col_offset": 0,
       "end_col_offset": 17,
@@ -879,86 +757,6 @@
       "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
       "test_id": "B603",
       "test_name": "subprocess_without_shell_equals_true"
-    },
-    {
-      "code": "15 import sys\n16 import xml.etree.ElementTree as ET\n17 \n",
-      "col_offset": 0,
-      "end_col_offset": 34,
-      "filename": "scripts/download_geoportal_krajowy.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 20,
-        "link": "https://cwe.mitre.org/data/definitions/20.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.",
-      "line_number": 16,
-      "line_range": [
-        16
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b405-import-xml-etree",
-      "test_id": "B405",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "51     try:\n52         root = ET.fromstring(resp.content)\n53     except ET.ParseError:\n",
-      "col_offset": 15,
-      "end_col_offset": 42,
-      "filename": "scripts/download_geoportal_krajowy.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 20,
-        "link": "https://cwe.mitre.org/data/definitions/20.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Using xml.etree.ElementTree.fromstring to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree.fromstring with its defusedxml equivalent function or make sure defusedxml.defuse_stdlib() is called",
-      "line_number": 52,
-      "line_range": [
-        52
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-elementtree",
-      "test_id": "B314",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "21 import time\n22 import xml.etree.ElementTree as ET\n23 from dataclasses import asdict, dataclass\n",
-      "col_offset": 0,
-      "end_col_offset": 34,
-      "filename": "scripts/download_geoportal_wfs_geotiff.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 20,
-        "link": "https://cwe.mitre.org/data/definitions/20.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.",
-      "line_number": 22,
-      "line_range": [
-        22
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b405-import-xml-etree",
-      "test_id": "B405",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "193     resp.raise_for_status()\n194     root = ET.fromstring(resp.content)\n195     sheets: list[OrthoSheet] = []\n",
-      "col_offset": 11,
-      "end_col_offset": 38,
-      "filename": "scripts/download_geoportal_wfs_geotiff.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 20,
-        "link": "https://cwe.mitre.org/data/definitions/20.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Using xml.etree.ElementTree.fromstring to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree.fromstring with its defusedxml equivalent function or make sure defusedxml.defuse_stdlib() is called",
-      "line_number": 194,
-      "line_range": [
-        194
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-elementtree",
-      "test_id": "B314",
-      "test_name": "blacklist"
     }
   ]
 }

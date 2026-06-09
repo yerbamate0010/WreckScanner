@@ -25,82 +25,6 @@ SIM105 Use `contextlib.suppress(OSError)` instead of `try`-`except`-`pass`
    |
 help: Replace `try`-`except`-`pass` with `with contextlib.suppress(OSError): ...`
 
-B023 Function definition does not bind loop variable `selected`
-   --> app/map_downloads.py:282:45
-    |
-281 |         def on_download_progress(done, total, *, resume_from=0, resumed=False, restarted=False):
-282 |             effective_total = total or int((selected.file_size_mb or 0) * BYTES_PER_MIB)
-    |                                             ^^^^^^^^
-283 |             effective_total = max(effective_total, done)
-284 |             sheet_name = selected.godlo or tif_path.name
-    |
-
-B023 Function definition does not bind loop variable `selected`
-   --> app/map_downloads.py:284:26
-    |
-282 |             effective_total = total or int((selected.file_size_mb or 0) * BYTES_PER_MIB)
-283 |             effective_total = max(effective_total, done)
-284 |             sheet_name = selected.godlo or tif_path.name
-    |                          ^^^^^^^^
-285 |             if resumed:
-286 |                 message = f"GeoTIFF {year}: wznawiam pobieranie arkusza {sheet_name}"
-    |
-
-B023 Function definition does not bind loop variable `tif_path`
-   --> app/map_downloads.py:284:44
-    |
-282 |             effective_total = total or int((selected.file_size_mb or 0) * BYTES_PER_MIB)
-283 |             effective_total = max(effective_total, done)
-284 |             sheet_name = selected.godlo or tif_path.name
-    |                                            ^^^^^^^^
-285 |             if resumed:
-286 |                 message = f"GeoTIFF {year}: wznawiam pobieranie arkusza {sheet_name}"
-    |
-
-B023 Function definition does not bind loop variable `year`
-   --> app/map_downloads.py:286:38
-    |
-284 |             sheet_name = selected.godlo or tif_path.name
-285 |             if resumed:
-286 |                 message = f"GeoTIFF {year}: wznawiam pobieranie arkusza {sheet_name}"
-    |                                      ^^^^
-287 |                 cache = "partial"
-288 |             elif restarted:
-    |
-
-B023 Function definition does not bind loop variable `year`
-   --> app/map_downloads.py:289:38
-    |
-287 |                 cache = "partial"
-288 |             elif restarted:
-289 |                 message = f"GeoTIFF {year}: pobieram od początku arkusz {sheet_name}"
-    |                                      ^^^^
-290 |                 cache = "miss"
-291 |             else:
-    |
-
-B023 Function definition does not bind loop variable `year`
-   --> app/map_downloads.py:292:38
-    |
-290 |                 cache = "miss"
-291 |             else:
-292 |                 message = f"GeoTIFF {year}: pobieram arkusz {sheet_name}"
-    |                                      ^^^^
-293 |                 cache = "miss"
-294 |             if progress:
-    |
-
-B023 Function definition does not bind loop variable `year`
-   --> app/map_downloads.py:300:26
-    |
-298 |                     current=done,
-299 |                     total=effective_total,
-300 |                     year=year,
-    |                          ^^^^
-301 |                     cache=cache,
-302 |                     resume_from=resume_from,
-    |
-
 UP012 [*] Unnecessary UTF-8 `encoding` argument to `encode`
    --> app/server.py:224:11
     |
@@ -171,29 +95,6 @@ B905 `zip()` without an explicit `strict=` parameter
 126 |             if class_id not in CAR_CLASSES:
     |
 help: Add explicit value for parameter `strict=`
-
-UP012 [*] Unnecessary UTF-8 `encoding` argument to `encode`
-  --> core/privacy_requests.py:27:27
-   |
-26 | def _request_id(created_at: str, email: str) -> str:
-27 |     digest = hashlib.sha1(f"{created_at}:{email}:{secrets.token_urlsafe(12)}".encode("utf-8")).hexdigest()[:10]
-   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-28 |     stamp = created_at.replace("-", "").replace(":", "").removesuffix("Z")
-29 |     return f"privacy_{stamp}_{digest}"
-   |
-help: Remove unnecessary `encoding` argument
-
-UP012 [*] Unnecessary UTF-8 `encoding` argument to `encode`
-   --> core/report_packages.py:209:9
-    |
-207 |     stamp = _now_utc().strftime("%Y%m%dT%H%M%SZ")
-208 |     digest = hashlib.sha1(
-209 |         f"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}".encode("utf-8")
-    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-210 |     ).hexdigest()[:8]
-211 |     return f"report_{stamp}_{digest}"
-    |
-help: Remove unnecessary `encoding` argument
 
 SIM105 Use `contextlib.suppress(OSError)` instead of `try`-`except`-`pass`
    --> core/reporter.py:118:17
@@ -345,5 +246,5 @@ SIM117 [*] Use a single `with` statement with multiple contexts instead of neste
    |
 help: Combine `with` statements
 
-Found 26 errors.
-[*] 12 fixable with the `--fix` option (5 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Found 17 errors.
+[*] 10 fixable with the `--fix` option (5 hidden fixes can be enabled with the `--unsafe-fixes` option).

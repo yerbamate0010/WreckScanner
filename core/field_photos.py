@@ -216,7 +216,10 @@ def _links(lat: float, lon: float) -> dict[str, str]:
 
 def _photo_id(upload: UploadedFile) -> str:
     stamp = _now_utc().strftime("%Y%m%dT%H%M%SZ")
-    digest = hashlib.sha1(f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode()).hexdigest()[:8]
+    digest = hashlib.sha1(
+        f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:8]
     return f"photo_{stamp}_{digest}"
 
 

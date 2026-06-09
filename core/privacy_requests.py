@@ -24,7 +24,10 @@ def _safe_text(value: Any, max_len: int) -> str:
 
 
 def _request_id(created_at: str, email: str) -> str:
-    digest = hashlib.sha1(f"{created_at}:{email}:{secrets.token_urlsafe(12)}".encode("utf-8")).hexdigest()[:10]
+    digest = hashlib.sha1(
+        f"{created_at}:{email}:{secrets.token_urlsafe(12)}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:10]
     stamp = created_at.replace("-", "").replace(":", "").removesuffix("Z")
     return f"privacy_{stamp}_{digest}"
 

@@ -1,5 +1,6 @@
-........................................................................ [ 50%]
-........................................................................ [100%]
+........................................................................ [ 49%]
+........................................................................ [ 99%]
+.                                                                        [100%]
 =============================== warnings summary ===============================
 tests/test_download_geoportal_wfs_geotiff.py::DownloadTifTests::test_existing_markup_tif_is_discarded_and_redownloaded
 tests/test_download_geoportal_wfs_geotiff.py::DownloadTifTests::test_existing_tif_is_cache_hit
