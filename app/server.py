@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import http.server
 import json
+import logging
 import math
 import os
 import secrets
@@ -74,6 +75,10 @@ from core.wrecks import (
 )
 
 configure_process_encoding()
+
+logger = logging.getLogger("wreckscanner.server")
+
+_REQUEST_ID_SAFE_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")
 
 _download_progress_lock = threading.Lock()
 _download_progress = {
@@ -197,7 +202,7 @@ def start_photo_retention_scheduler(
             try:
                 _run_photo_retention(dry_run=False, source="scheduler")
             except Exception as exc:
-                print(f"⚠️  Photo retention failed: {exc}")
+                logger.exception("Photo retention scheduler failed: %s", exc)
             time.sleep(max(1.0, interval_seconds))
 
     thread = threading.Thread(target=worker, name="photo-retention", daemon=True)
@@ -271,7 +276,8 @@ def _cors_response_headers(origin: str | None) -> dict[str, str]:
     return {
         "Access-Control-Allow-Origin": origin_text,
         "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, X-Request-ID",
+        "Access-Control-Expose-Headers": "X-Request-ID",
         "Vary": "Origin",
     }
 
@@ -292,6 +298,44 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return False
 
+    def _request_id(self) -> str:
+        cached_request_id = getattr(self, "_cached_request_id", None)
+        if cached_request_id:
+            return cached_request_id
+
+        raw_request_id = str(self.headers.get("X-Request-ID", "")).strip()
+        request_id = "".join(
+            char for char in raw_request_id[:80] if char in _REQUEST_ID_SAFE_CHARS
+        )
+        if not request_id:
+            request_id = secrets.token_hex(8)
+        self._cached_request_id = request_id
+        return request_id
+
+    def _log_exception(
+        self,
+        message: str,
+        exc: BaseException,
+        *,
+        status: int | None = None,
+        level: int = logging.ERROR,
+    ) -> None:
+        request_path = urlsplit(getattr(self, "path", "")).path
+        client_address = getattr(self, "client_address", ("-",))
+        client_host = client_address[0] if client_address else "-"
+        logger.log(
+            level,
+            "%s request_id=%s method=%s path=%s status=%s client=%s error=%s",
+            message,
+            self._request_id(),
+            getattr(self, "command", "-"),
+            request_path,
+            status if status is not None else "-",
+            client_host,
+            exc,
+            exc_info=True,
+        )
+
     def _send_json(
         self,
         status: int,
@@ -300,11 +344,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         *,
         include_body: bool = True,
     ) -> None:
-        body = json.dumps(payload).encode("utf-8")
+        request_id = self._request_id()
+        response_payload = payload
+        if "error" in payload:
+            response_payload = {
+                **payload,
+                "request_id": str(payload.get("request_id") or request_id),
+            }
+            request_id = response_payload["request_id"]
+        body = json.dumps(response_payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Request-ID", request_id)
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -680,6 +733,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             self._send_json(200, map_downloads.geotiff_admin_cache_report(include_estimate=include_estimate))
         except Exception as exc:
+            self._log_exception("Failed to build GeoTIFF cache report", exc, status=500)
             self._send_json(500, {"status": "error", "error": str(exc)})
 
     def _handle_public_wreck_asset(self, request_path: str, *, include_body: bool = True) -> None:
@@ -1179,6 +1233,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             resp.raise_for_status()
             raw_bytes = resp.content
         except Exception as exc:
+            self._log_exception("WMS upstream request failed", exc, status=502)
             self.send_error(502, f"WMS upstream error: {exc}")
             return
 
@@ -1201,7 +1256,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             enhanced = enhance_orthophoto(img, settings=load_enhancement_settings())
         except Exception as exc:
             # Fail open — wolimy oryginalny tile niż błąd 500 łamiący mapę
-            print(f"⚠️  enhance failed for {upstream_path}: {exc} — passing raw tile")
+            self._log_exception(
+                "WMS enhancement failed; returning raw tile",
+                exc,
+                status=200,
+                level=logging.WARNING,
+            )
             self.send_response(200)
             self.send_header("Content-Type", "image/png")
             self.send_header("Content-Length", str(len(raw_bytes)))
@@ -1256,6 +1316,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except RuntimeError as e:
                 self._send_json(409, {"error": str(e)})
             except Exception as e:
+                self._log_exception("Manual photo retention run failed", e, status=500)
                 self._send_json(500, {"error": str(e), "retention": _photo_retention_snapshot()})
             return
         public_report_package_wreck_id = self._public_report_package_wreck_id(request_path)
@@ -1624,6 +1685,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_json(e.status, {"error": e.message})
             except Exception as e:
                 pipeline.finish_pipeline(pipeline_token)
+                self._log_exception("Analysis pipeline failed", e, status=500)
                 self._send_json(500, {"error": str(e)})
         elif request_path == "/api/wrecks":
             try:

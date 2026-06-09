@@ -76,6 +76,26 @@ def patch_default_app_settings(testcase: unittest.TestCase) -> None:
     testcase.addCleanup(patcher.stop)
 
 
+class JsonResponseRequestIdContractTests(unittest.TestCase):
+    def test_error_json_includes_request_id_and_response_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req-123"})
+
+        handler._send_json(400, {"error": "bad payload"})
+
+        payload = handler_json(handler)
+        self.assertEqual(payload["error"], "bad payload")
+        self.assertEqual(payload["request_id"], "req-123")
+        self.assertIn(("X-Request-ID", "req-123"), handler.response_headers)
+
+    def test_success_json_keeps_payload_shape_and_sanitizes_request_id_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req 123\nx"})
+
+        handler._send_json(200, {"status": "ok"})
+
+        self.assertEqual(handler_json(handler), {"status": "ok"})
+        self.assertIn(("X-Request-ID", "req123x"), handler.response_headers)
+
+
 class FakeCadastralResponse:
     text = """
     <table>
@@ -369,6 +389,8 @@ class SecurityHeadersContractTests(unittest.TestCase):
 
         self.assertEqual(allowed["Access-Control-Allow-Origin"], "https://wreckscanner.pl")
         self.assertNotEqual(allowed["Access-Control-Allow-Origin"], "*")
+        self.assertIn("X-Request-ID", allowed["Access-Control-Allow-Headers"])
+        self.assertEqual(allowed["Access-Control-Expose-Headers"], "X-Request-ID")
         self.assertEqual(allowed["Vary"], "Origin")
 
 
