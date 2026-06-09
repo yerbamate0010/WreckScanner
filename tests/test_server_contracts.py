@@ -444,6 +444,35 @@ class DownloadApiContractTests(unittest.TestCase):
         self.assertTrue(payload["job_token"])
         pipeline.finish_pipeline(payload["job_token"])
 
+    def test_download_progress_callback_updates_percent_and_completion(self):
+        handler = make_handler(
+            "/api/download",
+            {"lat": 51.1, "lon": 17.1, "width": 40, "height": 50},
+        )
+        progress_events = []
+
+        def fake_download_maps(lat, lon, width, height, progress):
+            progress(stage="download", message="Pobieranie", current=2, total=4)
+            progress(stage="download", message="Bez postępu", current=1, total=0)
+            return ({2020: {"status": "ok"}}, "bbox", [])
+
+        with (
+            patch.object(map_downloads, "download_maps", side_effect=fake_download_maps),
+            patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
+            patch.object(server, "_set_download_progress", side_effect=lambda **payload: progress_events.append(payload)),
+            patch("builtins.print"),
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(payload["status"], "completed")
+        self.assertEqual(progress_events[0]["percent"], 0)
+        self.assertEqual(progress_events[1]["percent"], 50.0)
+        self.assertIsNone(progress_events[2]["percent"])
+        self.assertEqual(progress_events[-1]["status"], "done")
+        pipeline.finish_pipeline(payload["job_token"])
+
     def test_download_rejects_concurrent_pipeline(self):
         token = pipeline.start_pipeline("busy-client")
         handler = make_handler(

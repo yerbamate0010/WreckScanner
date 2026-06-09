@@ -106,6 +106,7 @@ _FIELD_PHOTO_PUBLIC_LAYER_KEYS = {
     "smoke": "field_photo_smoke",
 }
 _ADMIN_PHOTO_SEARCH_FIELDS = ("id", "photo_id", "wreck_id", "original_filename", "issue_type")
+_WFS_DOWNLOADED_CACHE_STATES = {"downloaded", "resumed", "restarted"}
 
 
 def _now_iso() -> str:
@@ -1538,6 +1539,75 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self._send_json(400, {"error": str(e)})
 
+    def _require_download_capacity(self) -> None:
+        pressure = pipeline.system_pressure()
+        if pressure["overloaded"]:
+            raise pipeline.HttpJsonError(
+                503,
+                "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"]),
+            )
+
+    def _download_area_params(self, data: dict) -> tuple[float, float, float]:
+        lat = float(data["lat"])
+        lon = float(data["lon"])
+        width = float(data.get("width", 50))
+        height = float(data.get("height", 50))
+        area_m = max(width, height)
+        if not math.isfinite(area_m) or area_m < config.MIN_SCAN_SIZE_M or area_m > config.MAX_SCAN_SIZE_M:
+            raise ValueError(f"Obszar analizy musi miec maksymalnie {config.MAX_SCAN_SIZE_M:g} m.")
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Nieprawidlowe wspolrzedne.")
+        return lat, lon, area_m
+
+    def _log_download_request(self, lat: float, lon: float, area_m: float) -> None:
+        print(
+            f"📍 Download request: lat={lat}, lon={lon}, area={area_m}×{area_m}m, density={core_config.NATIVE_TILE_PX}px/50m"
+        )
+
+    def _update_download_progress(self, **payload) -> None:
+        current = payload.pop("current", None)
+        total = payload.pop("total", None)
+        percent = pipeline.progress_percent(current, total) if current is not None and total is not None else None
+        _set_download_progress(
+            status="active",
+            percent=percent,
+            current=current,
+            total=total,
+            **payload,
+        )
+
+    def _download_progress_callback(self):
+        def progress(**payload):
+            self._update_download_progress(**payload)
+
+        return progress
+
+    def _download_wfs_metrics(self, wfs_summary: list[dict]) -> dict:
+        wfs_replaced = [item for item in wfs_summary if item.get("status") == "replaced"]
+        return {
+            "wfs_replaced": len(wfs_replaced),
+            "wfs_cache_hits": sum(1 for item in wfs_replaced if item.get("cache") == "hit"),
+            "wfs_downloaded": sum(1 for item in wfs_replaced if item.get("cache") in _WFS_DOWNLOADED_CACHE_STATES),
+            "wfs_skipped": sum(1 for item in wfs_summary if item.get("status") != "replaced"),
+        }
+
+    def _download_response_payload(self, results: dict, bbox, wfs_summary: list[dict], pipeline_token: str) -> dict:
+        return {
+            "status": "completed",
+            "saved": sum(1 for item in results.values() if item.get("status") == "ok"),
+            "missing": sum(1 for item in results.values() if item.get("status") == "missing"),
+            "total": len(config.WMS_YEARS),
+            **self._download_wfs_metrics(wfs_summary),
+            "job_token": pipeline_token,
+            "bbox": bbox,
+        }
+
+    def _send_download_response(self, payload: dict) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(payload).encode())
+
     def _handle_download(self) -> None:
         if not self._require_public_feature(
             "scan_analysis", "Skanowanie i analiza YOLO sa teraz wylaczone dla niezalogowanych."
@@ -1545,75 +1615,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         pipeline_token = None
         try:
-            pressure = pipeline.system_pressure()
-            if pressure["overloaded"]:
-                raise pipeline.HttpJsonError(
-                    503, "Raspberry Pi jest teraz przeciazone: " + "; ".join(pressure["reasons"])
-                )
-            data = self._read_json_body()
-            lat = float(data["lat"])
-            lon = float(data["lon"])
-            width = float(data.get("width", 50))
-            height = float(data.get("height", 50))
-            width = height = max(width, height)
-            if not math.isfinite(width) or width < config.MIN_SCAN_SIZE_M or width > config.MAX_SCAN_SIZE_M:
-                raise ValueError(f"Obszar analizy musi miec maksymalnie {config.MAX_SCAN_SIZE_M:g} m.")
-            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                raise ValueError("Nieprawidlowe wspolrzedne.")
+            self._require_download_capacity()
+            lat, lon, area_m = self._download_area_params(self._read_json_body())
             pipeline_token = pipeline.start_pipeline(pipeline.client_id(self))
-
-            print(
-                f"📍 Download request: lat={lat}, lon={lon}, area={width}×{height}m, density={core_config.NATIVE_TILE_PX}px/50m"
-            )
-
-            def progress(**payload):
-                current = payload.pop("current", None)
-                total = payload.pop("total", None)
-                percent = (
-                    pipeline.progress_percent(current, total) if current is not None and total is not None else None
-                )
-                _set_download_progress(
-                    status="active",
-                    percent=percent,
-                    current=current,
-                    total=total,
-                    **payload,
-                )
+            self._log_download_request(lat, lon, area_m)
 
             _set_download_progress(
                 status="active", stage="start", message="Przygotowuję pobieranie ortofotomap", percent=0
             )
-            results, bbox, wfs_summary = map_downloads.download_maps(lat, lon, width, height, progress=progress)
-            wfs_replaced = [r for r in wfs_summary if r.get("status") == "replaced"]
-            wfs_cache_hits = sum(1 for r in wfs_replaced if r.get("cache") == "hit")
-            wfs_downloaded = sum(1 for r in wfs_replaced if r.get("cache") in {"downloaded", "resumed", "restarted"})
-            wfs_skipped = sum(1 for r in wfs_summary if r.get("status") != "replaced")
+            results, bbox, wfs_summary = map_downloads.download_maps(
+                lat,
+                lon,
+                area_m,
+                area_m,
+                progress=self._download_progress_callback(),
+            )
             _set_download_progress(
                 status="done",
                 stage="done",
                 message="Pobieranie zakończone",
                 percent=100,
             )
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(
-                json.dumps(
-                    {
-                        "status": "completed",
-                        "saved": sum(1 for v in results.values() if v.get("status") == "ok"),
-                        "missing": sum(1 for v in results.values() if v.get("status") == "missing"),
-                        "total": len(config.WMS_YEARS),
-                        "wfs_replaced": len(wfs_replaced),
-                        "wfs_cache_hits": wfs_cache_hits,
-                        "wfs_downloaded": wfs_downloaded,
-                        "wfs_skipped": wfs_skipped,
-                        "job_token": pipeline_token,
-                        "bbox": bbox,
-                    }
-                ).encode()
-            )
+            self._send_download_response(self._download_response_payload(results, bbox, wfs_summary, pipeline_token))
 
         except pipeline.HttpJsonError as e:
             if pipeline_token:
