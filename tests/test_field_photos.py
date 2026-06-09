@@ -197,16 +197,15 @@ class FieldPhotoTests(unittest.TestCase):
             self.assertEqual(record["issue_type"], "infrastructure")
 
     def test_save_field_photo_rejects_unknown_issue_type(self):
-        with TemporaryDirectory() as tmp:
-            with self.assertRaisesRegex(ValueError, "typ pinezki"):
-                save_field_photo(
-                    upload(image_bytes("PNG"), filename="teren.png"),
-                    Path(tmp),
-                    fallback_lat="51.3",
-                    fallback_lon="17.4",
-                    issue_type="other",
-                    private_dir=Path(tmp) / "private",
-                )
+        with TemporaryDirectory() as tmp, self.assertRaisesRegex(ValueError, "typ pinezki"):
+            save_field_photo(
+                upload(image_bytes("PNG"), filename="teren.png"),
+                Path(tmp),
+                fallback_lat="51.3",
+                fallback_lon="17.4",
+                issue_type="other",
+                private_dir=Path(tmp) / "private",
+            )
 
     def test_save_field_photo_uses_map_fallback_for_invalid_exif_gps(self):
         with TemporaryDirectory() as tmp:
@@ -224,11 +223,10 @@ class FieldPhotoTests(unittest.TestCase):
             self.assertEqual(photo["lon"], 17.4)
 
     def test_save_field_photo_rejects_missing_coordinates(self):
-        with TemporaryDirectory() as tmp:
-            with self.assertRaisesRegex(ValueError, "nie ma współrzędnych GPS"):
-                save_field_photo(
-                    upload(image_bytes("PNG"), filename="teren.png"), Path(tmp), private_dir=Path(tmp) / "private"
-                )
+        with TemporaryDirectory() as tmp, self.assertRaisesRegex(ValueError, "nie ma współrzędnych GPS"):
+            save_field_photo(
+                upload(image_bytes("PNG"), filename="teren.png"), Path(tmp), private_dir=Path(tmp) / "private"
+            )
 
     def test_save_field_photo_validates_size_type_and_field(self):
         with TemporaryDirectory() as tmp:

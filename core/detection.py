@@ -36,7 +36,7 @@ def resolve_device(device: str) -> str:
         if torch.backends.mps.is_available():
             return "mps"
     except Exception:
-        pass
+        return "cpu"
     return "cpu"
 
 
@@ -121,7 +121,7 @@ def detect_cars(
         polys = result.obb.xyxyxyxy.cpu().numpy()
         classes = result.obb.cls.cpu().numpy().astype(int)
         confs = result.obb.conf.cpu().numpy()
-        for poly, class_id, det_conf in zip(polys, classes, confs):
+        for poly, class_id, det_conf in zip(polys, classes, confs, strict=False):
             class_id = int(class_id)
             if class_id not in CAR_CLASSES:
                 continue

@@ -206,7 +206,8 @@ def prepare_report_photos(uploads: list[ReportPhotoUpload]) -> list[PreparedRepo
 def _package_id(wreck_id: str, fields: dict[str, str]) -> str:
     stamp = _now_utc().strftime("%Y%m%dT%H%M%SZ")
     digest = hashlib.sha1(
-        f"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}".encode("utf-8")
+        f"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}".encode(),
+        usedforsecurity=False,
     ).hexdigest()[:8]
     return f"report_{stamp}_{digest}"
 

@@ -38,14 +38,14 @@ class SurfaceLayerTests(unittest.TestCase):
             parse_bbox("51,17,52,18")
 
     def test_surface_geojson_returns_empty_error_payload_on_overpass_rate_limit(self):
-        with TemporaryDirectory() as tmp:
-            with (
-                patch("core.surface.SURFACE_CACHE_DIR", Path(tmp)),
-                patch("core.surface._overpass_cooldown_until", 0),
-                patch("core.surface._overpass_cooldown_error", ""),
-                patch("core.surface.requests.post", return_value=FakeOverpassResponse()),
-            ):
-                geojson = surface_features_geojson((51.0888, 17.0358, 51.0899, 17.0392))
+        with (
+            TemporaryDirectory() as tmp,
+            patch("core.surface.SURFACE_CACHE_DIR", Path(tmp)),
+            patch("core.surface._overpass_cooldown_until", 0),
+            patch("core.surface._overpass_cooldown_error", ""),
+            patch("core.surface.requests.post", return_value=FakeOverpassResponse()),
+        ):
+            geojson = surface_features_geojson((51.0888, 17.0358, 51.0899, 17.0392))
 
         self.assertEqual(geojson["type"], "FeatureCollection")
         self.assertEqual(geojson["features"], [])
@@ -53,15 +53,15 @@ class SurfaceLayerTests(unittest.TestCase):
         self.assertIn("HTTP 429", geojson["error"])
 
     def test_surface_geojson_uses_cooldown_after_rate_limit(self):
-        with TemporaryDirectory() as tmp:
-            with (
-                patch("core.surface.SURFACE_CACHE_DIR", Path(tmp)),
-                patch("core.surface._overpass_cooldown_until", 0),
-                patch("core.surface._overpass_cooldown_error", ""),
-                patch("core.surface.requests.post", return_value=FakeOverpassResponse()) as post_mock,
-            ):
-                first = surface_features_geojson((51.0888, 17.0358, 51.0899, 17.0392))
-                second = surface_features_geojson((51.0890, 17.0360, 51.0901, 17.0394))
+        with (
+            TemporaryDirectory() as tmp,
+            patch("core.surface.SURFACE_CACHE_DIR", Path(tmp)),
+            patch("core.surface._overpass_cooldown_until", 0),
+            patch("core.surface._overpass_cooldown_error", ""),
+            patch("core.surface.requests.post", return_value=FakeOverpassResponse()) as post_mock,
+        ):
+            first = surface_features_geojson((51.0888, 17.0358, 51.0899, 17.0392))
+            second = surface_features_geojson((51.0890, 17.0360, 51.0901, 17.0394))
 
         self.assertEqual(first["cache"], "error")
         self.assertEqual(second["cache"], "cooldown")

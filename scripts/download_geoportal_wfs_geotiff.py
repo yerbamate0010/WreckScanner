@@ -19,7 +19,6 @@ import math
 import os
 import sys
 import time
-import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
@@ -29,6 +28,7 @@ from urllib.parse import urlparse
 import cv2
 import numpy as np
 import requests
+from defusedxml import ElementTree as ET
 from PIL import Image, UnidentifiedImageError
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

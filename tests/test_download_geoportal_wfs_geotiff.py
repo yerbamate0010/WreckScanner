@@ -3,11 +3,13 @@ import unittest
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from PIL import Image
 
 from scripts.download_geoportal_wfs_geotiff import (
     OrthoSheet,
+    TifDownloadResult,
     choose_rgb_sheet,
     cleanup_geotiff_cache,
     download_tif,
@@ -292,6 +294,72 @@ class CleanupGeotiffCacheTests(unittest.TestCase):
 
             self.assertTrue(active_part.exists())
             self.assertEqual(report["removed"], [])
+
+
+class ApplyWfsGeotiffReplacementTests(unittest.TestCase):
+    def test_download_progress_callback_keeps_own_year_sheet_and_estimated_size(self):
+        from app import map_downloads
+
+        with TemporaryDirectory() as tmp:
+            raw_dir = Path(tmp) / "raw"
+            data_dir = Path(tmp) / "data"
+            raw_dir.mkdir()
+            data_dir.mkdir()
+            sheets_by_year = {
+                2024: [make_sheet(year=2024, feature_id="a", godlo="SHEET-A", file_size_mb=1.5, filled="TAK")],
+                2025: [make_sheet(year=2025, feature_id="b", godlo="SHEET-B", file_size_mb=2.5, filled="TAK")],
+            }
+            delayed_callbacks = []
+            progress_events = []
+
+            def fake_download_tif(sheet, raw_dir_arg, _session, _timeout, progress=None):
+                tif_path = raw_dir_arg / f"{sheet.year}.tif"
+                tif_path.write_bytes(tiff_bytes())
+                delayed_callbacks.append(progress)
+                return TifDownloadResult(
+                    path=tif_path,
+                    cache="downloaded",
+                    resume_from=0,
+                    bytes_done=tif_path.stat().st_size,
+                    bytes_total=tif_path.stat().st_size,
+                )
+
+            def fake_crop_geotiff_to_png(_tif_path, png_path, _metadata):
+                png_path.parent.mkdir(parents=True, exist_ok=True)
+                png_path.write_bytes(b"png")
+                return {"status": "ok"}
+
+            with (
+                patch.object(map_downloads.config, "WFS_GEOTIFF_YEARS", [2024, 2025]),
+                patch.object(map_downloads.config, "WFS_GEOTIFF_CACHE_DIR", raw_dir),
+                patch.object(map_downloads.config, "DOWNLOAD_DATA_DIR", data_dir),
+                patch.object(map_downloads, "get_http_session", return_value=object()),
+                patch.object(map_downloads, "wfs_bbox_from_metadata", return_value="bbox"),
+                patch.object(map_downloads, "query_wfs_sheets", side_effect=lambda year, *_args: sheets_by_year[year]),
+                patch.object(map_downloads, "download_tif", side_effect=fake_download_tif),
+                patch.object(map_downloads, "crop_geotiff_to_png", side_effect=fake_crop_geotiff_to_png),
+                patch.object(map_downloads, "image_quality_for_path", return_value={"quality": "ok"}),
+                patch.object(map_downloads, "geotiff_cache_report", return_value={"status": "ok"}),
+            ):
+                summary = map_downloads.apply_wfs_geotiff_replacements(
+                    {"bbox_4326": {}},
+                    {2024: {}, 2025: {}},
+                    progress=lambda **event: progress_events.append(event),
+                )
+
+            self.assertEqual([item["status"] for item in summary], ["replaced", "replaced"])
+            self.assertEqual(len(delayed_callbacks), 2)
+
+            delayed_callbacks[0](done=123, total=0, resume_from=32, resumed=True)
+
+            delayed_event = progress_events[-1]
+            self.assertEqual(delayed_event["year"], 2024)
+            self.assertEqual(delayed_event["cache"], "partial")
+            self.assertEqual(delayed_event["resume_from"], 32)
+            self.assertEqual(delayed_event["bytes_done"], 123)
+            self.assertEqual(delayed_event["bytes_total"], int(1.5 * map_downloads.BYTES_PER_MIB))
+            self.assertIn("SHEET-A", delayed_event["message"])
+            self.assertNotIn("SHEET-B", delayed_event["message"])
 
 
 if __name__ == "__main__":

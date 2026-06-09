@@ -76,6 +76,26 @@ def patch_default_app_settings(testcase: unittest.TestCase) -> None:
     testcase.addCleanup(patcher.stop)
 
 
+class JsonResponseRequestIdContractTests(unittest.TestCase):
+    def test_error_json_includes_request_id_and_response_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req-123"})
+
+        handler._send_json(400, {"error": "bad payload"})
+
+        payload = handler_json(handler)
+        self.assertEqual(payload["error"], "bad payload")
+        self.assertEqual(payload["request_id"], "req-123")
+        self.assertIn(("X-Request-ID", "req-123"), handler.response_headers)
+
+    def test_success_json_keeps_payload_shape_and_sanitizes_request_id_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req 123\nx"})
+
+        handler._send_json(200, {"status": "ok"})
+
+        self.assertEqual(handler_json(handler), {"status": "ok"})
+        self.assertIn(("X-Request-ID", "req123x"), handler.response_headers)
+
+
 class FakeCadastralResponse:
     text = """
     <table>
@@ -369,6 +389,8 @@ class SecurityHeadersContractTests(unittest.TestCase):
 
         self.assertEqual(allowed["Access-Control-Allow-Origin"], "https://wreckscanner.pl")
         self.assertNotEqual(allowed["Access-Control-Allow-Origin"], "*")
+        self.assertIn("X-Request-ID", allowed["Access-Control-Allow-Headers"])
+        self.assertEqual(allowed["Access-Control-Expose-Headers"], "X-Request-ID")
         self.assertEqual(allowed["Vary"], "Origin")
 
 
@@ -420,6 +442,35 @@ class DownloadApiContractTests(unittest.TestCase):
         self.assertEqual(payload["wfs_downloaded"], 3)
         self.assertEqual(payload["wfs_skipped"], 1)
         self.assertTrue(payload["job_token"])
+        pipeline.finish_pipeline(payload["job_token"])
+
+    def test_download_progress_callback_updates_percent_and_completion(self):
+        handler = make_handler(
+            "/api/download",
+            {"lat": 51.1, "lon": 17.1, "width": 40, "height": 50},
+        )
+        progress_events = []
+
+        def fake_download_maps(lat, lon, width, height, progress):
+            progress(stage="download", message="Pobieranie", current=2, total=4)
+            progress(stage="download", message="Bez postępu", current=1, total=0)
+            return ({2020: {"status": "ok"}}, "bbox", [])
+
+        with (
+            patch.object(map_downloads, "download_maps", side_effect=fake_download_maps),
+            patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
+            patch.object(server, "_set_download_progress", side_effect=lambda **payload: progress_events.append(payload)),
+            patch("builtins.print"),
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(payload["status"], "completed")
+        self.assertEqual(progress_events[0]["percent"], 0)
+        self.assertEqual(progress_events[1]["percent"], 50.0)
+        self.assertIsNone(progress_events[2]["percent"])
+        self.assertEqual(progress_events[-1]["status"], "done")
         pipeline.finish_pipeline(payload["job_token"])
 
     def test_download_rejects_concurrent_pipeline(self):
@@ -1123,6 +1174,50 @@ class FieldPhotoApiContractTests(unittest.TestCase):
 
         self.assertEqual([photo["id"] for photo in handler_json(guest)["photos"]], ["p1"])
         self.assertEqual([photo["id"] for photo in handler_json(admin)["photos"]], ["p1", "p2", "p3"])
+
+    def test_admin_photo_queue_filters_status_scope_issue_and_search(self):
+        field_photos = [
+            {
+                "id": "field-record-1",
+                "photo_id": "field-1",
+                "scope": "field",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            },
+            {
+                "id": "field-record-2",
+                "photo_id": "field-2",
+                "scope": "field",
+                "public_review_status": "approved",
+                "issue_type": "smoke",
+                "original_filename": "dym-zaakceptowany.jpg",
+            },
+        ]
+        wreck_photos = [
+            {
+                "id": "wreck-photo-1",
+                "photo_id": "wreck-1",
+                "scope": "wreck",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            }
+        ]
+        handler = make_handler(
+            "/api/admin/photos?status=pending&scope=field&issue_type=smoke&q=dym",
+            headers=admin_cookie(),
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_field_photo_review_items", return_value=field_photos),
+            patch.object(server, "list_wreck_photo_review_items", return_value=wreck_photos),
+        ):
+            server.Handler.do_GET(handler)
+
+        self.assertEqual(handler.status, 200)
+        self.assertEqual([photo["photo_id"] for photo in handler_json(handler)["photos"]], ["field-1"])
 
     def test_field_photo_list_assets_are_public_and_delete_requires_admin(self):
         with TemporaryDirectory() as tmp:

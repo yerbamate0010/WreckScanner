@@ -26,7 +26,7 @@ def parse_multipart_form(
     if max_body_bytes is not None and len(body) > max_body_bytes:
         raise ValueError("Formularz przekracza limit rozmiaru pakietu.")
 
-    header = f"Content-Type: {content_type}\r\n\r\n".encode("utf-8")
+    header = f"Content-Type: {content_type}\r\n\r\n".encode()
     message = BytesParser(policy=policy.default).parsebytes(header + body)
     if not message.is_multipart():
         raise ValueError("Nieprawidłowy formularz multipart.")

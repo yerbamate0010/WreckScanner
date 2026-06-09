@@ -1,0 +1,4558 @@
+{
+  "generated_at": "2026-06-09T16:45:12Z",
+  "root": "/home/test/Desktop/WreckScanner",
+  "summary": {
+    "source_files": 70,
+    "python_files": 60,
+    "javascript_files": 6,
+    "html_css_files": 4
+  },
+  "biggest_files": [
+    {
+      "path": "web/app.js",
+      "bytes": 190400,
+      "lines": 4591
+    },
+    {
+      "path": "web/styles.css",
+      "bytes": 63155,
+      "lines": 3154
+    },
+    {
+      "path": "app/server.py",
+      "bytes": 72025,
+      "lines": 1698
+    },
+    {
+      "path": "tests/test_server_contracts.py",
+      "bytes": 64690,
+      "lines": 1404
+    },
+    {
+      "path": "web/i18n.js",
+      "bytes": 79223,
+      "lines": 1246
+    },
+    {
+      "path": "core/wrecks.py",
+      "bytes": 49563,
+      "lines": 1189
+    },
+    {
+      "path": "web/index.html",
+      "bytes": 78069,
+      "lines": 1175
+    },
+    {
+      "path": "tests/test_frontend_contracts.py",
+      "bytes": 67594,
+      "lines": 973
+    },
+    {
+      "path": "core/report_packages.py",
+      "bytes": 29519,
+      "lines": 799
+    },
+    {
+      "path": "core/data_diagnostics.py",
+      "bytes": 26500,
+      "lines": 711
+    },
+    {
+      "path": "app/map_downloads.py",
+      "bytes": 24000,
+      "lines": 638
+    },
+    {
+      "path": "scripts/download_geoportal_wfs_geotiff.py",
+      "bytes": 23657,
+      "lines": 635
+    },
+    {
+      "path": "core/reporter.py",
+      "bytes": 29290,
+      "lines": 617
+    },
+    {
+      "path": "scripts/diagnose_architecture.py",
+      "bytes": 22931,
+      "lines": 614
+    },
+    {
+      "path": "core/field_photos.py",
+      "bytes": 18560,
+      "lines": 515
+    },
+    {
+      "path": "tests/test_data_diagnostics.py",
+      "bytes": 18591,
+      "lines": 444
+    },
+    {
+      "path": "core/report_pdf.py",
+      "bytes": 12961,
+      "lines": 381
+    },
+    {
+      "path": "tests/test_report_packages.py",
+      "bytes": 17779,
+      "lines": 372
+    },
+    {
+      "path": "core/surface.py",
+      "bytes": 11342,
+      "lines": 320
+    },
+    {
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "bytes": 10714,
+      "lines": 299
+    }
+  ],
+  "longest_functions": [
+    {
+      "path": "app/server.py",
+      "name": "do_POST",
+      "line": 1229,
+      "lines": 441,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_frontend_contracts.py",
+      "name": "test_report_package_modal_and_admin_popup_action_exist",
+      "line": 89,
+      "lines": 268,
+      "kind": "python"
+    },
+    {
+      "path": "core/reporter.py",
+      "name": "render_report",
+      "line": 359,
+      "lines": 235,
+      "kind": "python"
+    },
+    {
+      "path": "core/data_diagnostics.py",
+      "name": "_audit_wrecks",
+      "line": 414,
+      "lines": 214,
+      "kind": "python"
+    },
+    {
+      "path": "app/map_downloads.py",
+      "name": "apply_wfs_geotiff_replacements",
+      "line": 166,
+      "lines": 204,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_frontend_contracts.py",
+      "name": "test_map_layer_toggles_and_manual_wreck_creation_exist",
+      "line": 686,
+      "lines": 192,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_frontend_contracts.py",
+      "name": "test_admin_field_photo_upload_layer_exists",
+      "line": 505,
+      "lines": 180,
+      "kind": "python"
+    },
+    {
+      "path": "core/scoring.py",
+      "name": "score_candidates",
+      "line": 112,
+      "lines": 162,
+      "kind": "python"
+    },
+    {
+      "path": "app/server.py",
+      "name": "do_GET",
+      "line": 760,
+      "lines": 150,
+      "kind": "python"
+    },
+    {
+      "path": "core/data_diagnostics.py",
+      "name": "_audit_field_photos",
+      "line": 258,
+      "lines": 133,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_server_contracts.py",
+      "name": "test_wreck_photo_upload_allows_public_pending_and_admin_review",
+      "line": 869,
+      "lines": 132,
+      "kind": "python"
+    },
+    {
+      "path": "core/reporter.py",
+      "name": "save_candidate_crops",
+      "line": 183,
+      "lines": 116,
+      "kind": "python"
+    },
+    {
+      "path": "core/wrecks.py",
+      "name": "_render_record_html",
+      "line": 874,
+      "lines": 112,
+      "kind": "python"
+    },
+    {
+      "path": "core/wrecks.py",
+      "name": "save_wreck_from_rank",
+      "line": 1077,
+      "lines": 112,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_server_contracts.py",
+      "name": "test_field_photo_list_assets_are_public_and_delete_requires_admin",
+      "line": 1127,
+      "lines": 107,
+      "kind": "python"
+    },
+    {
+      "path": "web/app.js",
+      "name": "runAll",
+      "line": 4372,
+      "lines": 106,
+      "kind": "javascript"
+    },
+    {
+      "path": "scripts/diagnose_architecture.py",
+      "name": "format_markdown",
+      "line": 483,
+      "lines": 100,
+      "kind": "python"
+    },
+    {
+      "path": "scripts/download_geoportal_wfs_geotiff.py",
+      "name": "main",
+      "line": 540,
+      "lines": 91,
+      "kind": "python"
+    },
+    {
+      "path": "app/analyze.py",
+      "name": "main",
+      "line": 77,
+      "lines": 90,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_frontend_contracts.py",
+      "name": "test_scan_area_controls_context_menu_and_crosshair_contract",
+      "line": 879,
+      "lines": 90,
+      "kind": "python"
+    },
+    {
+      "path": "core/data_backup.py",
+      "name": "run_backup",
+      "line": 134,
+      "lines": 87,
+      "kind": "python"
+    },
+    {
+      "path": "app/map_downloads.py",
+      "name": "download_maps",
+      "line": 552,
+      "lines": 86,
+      "kind": "python"
+    },
+    {
+      "path": "app/server.py",
+      "name": "do_DELETE",
+      "line": 911,
+      "lines": 86,
+      "kind": "python"
+    },
+    {
+      "path": "app/server.py",
+      "name": "do_PATCH",
+      "line": 998,
+      "lines": 85,
+      "kind": "python"
+    },
+    {
+      "path": "core/photo_retention.py",
+      "name": "retire_private_originals",
+      "line": 184,
+      "lines": 82,
+      "kind": "python"
+    },
+    {
+      "path": "app/server.py",
+      "name": "_handle_wms_proxy",
+      "line": 1149,
+      "lines": 79,
+      "kind": "python"
+    },
+    {
+      "path": "core/wrecks.py",
+      "name": "save_manual_wreck",
+      "line": 1001,
+      "lines": 74,
+      "kind": "python"
+    },
+    {
+      "path": "tests/test_report_packages.py",
+      "name": "test_create_report_package_generates_zip_and_keeps_record_without_reporter_data",
+      "line": 139,
+      "lines": 74,
+      "kind": "python"
+    },
+    {
+      "path": "core/surface.py",
+      "name": "surface_features_geojson",
+      "line": 247,
+      "lines": 73,
+      "kind": "python"
+    },
+    {
+      "path": "scripts/download_geoportal_krajowy.py",
+      "name": "main",
+      "line": 97,
+      "lines": 73,
+      "kind": "python"
+    }
+  ],
+  "internal_imports": [
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.config",
+      "path": "app/analyze.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.detection",
+      "path": "app/analyze.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.detection",
+      "path": "app/analyze.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.detection",
+      "path": "app/analyze.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.detection",
+      "path": "app/analyze.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.diagnostics",
+      "path": "app/analyze.py",
+      "line": 31,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.enhancement",
+      "path": "app/analyze.py",
+      "line": 32,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.reporter",
+      "path": "app/analyze.py",
+      "line": 33,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.reporter",
+      "path": "app/analyze.py",
+      "line": 33,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.runtime",
+      "path": "app/analyze.py",
+      "line": 34,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.scoring",
+      "path": "app/analyze.py",
+      "line": 35,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.settings_store",
+      "path": "app/analyze.py",
+      "line": 36,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.vision",
+      "path": "app/analyze.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.vision",
+      "path": "app/analyze.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.vision",
+      "path": "app/analyze.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.vision",
+      "path": "app/analyze.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.analyze",
+      "to": "core.vision",
+      "path": "app/analyze.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.config",
+      "to": "core.config",
+      "path": "app/config.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "app.config",
+      "to": "core.config",
+      "path": "app/config.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "app.config",
+      "to": "core.config",
+      "path": "app/config.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "app.config",
+      "to": "core.config",
+      "path": "app/config.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "app.config",
+      "path": "app/map_downloads.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.config",
+      "path": "app/map_downloads.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.config",
+      "path": "app/map_downloads.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.config",
+      "path": "app/map_downloads.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.geo",
+      "path": "app/map_downloads.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.geo",
+      "path": "app/map_downloads.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.geo",
+      "path": "app/map_downloads.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "core.settings_store",
+      "path": "app/map_downloads.py",
+      "line": 19,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.map_downloads",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "app/map_downloads.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "app.pipeline",
+      "to": "app.config",
+      "path": "app/pipeline.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "app.config",
+      "path": "app/server.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "app.map_downloads",
+      "path": "app/server.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "app.pipeline",
+      "path": "app/server.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "app.wms_cache",
+      "path": "app/server.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.cadastral",
+      "path": "app/server.py",
+      "line": 23,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.cadastral",
+      "path": "app/server.py",
+      "line": 23,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.config",
+      "path": "app/server.py",
+      "line": 22,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.enhancement",
+      "path": "app/server.py",
+      "line": 24,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.field_photos",
+      "path": "app/server.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.map_crops",
+      "path": "app/server.py",
+      "line": 34,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.map_crops",
+      "path": "app/server.py",
+      "line": 34,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.photo_retention",
+      "path": "app/server.py",
+      "line": 35,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.privacy_requests",
+      "path": "app/server.py",
+      "line": 36,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.privacy_requests",
+      "path": "app/server.py",
+      "line": 36,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.privacy_requests",
+      "path": "app/server.py",
+      "line": 36,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.report_packages",
+      "path": "app/server.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.report_packages",
+      "path": "app/server.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.report_packages",
+      "path": "app/server.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.report_packages",
+      "path": "app/server.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.report_packages",
+      "path": "app/server.py",
+      "line": 37,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.runtime",
+      "path": "app/server.py",
+      "line": 44,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.runtime",
+      "path": "app/server.py",
+      "line": 44,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.settings_store",
+      "path": "app/server.py",
+      "line": 45,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.submission_limits",
+      "path": "app/server.py",
+      "line": 53,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.submission_limits",
+      "path": "app/server.py",
+      "line": 53,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.surface",
+      "path": "app/server.py",
+      "line": 54,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.surface",
+      "path": "app/server.py",
+      "line": 55,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.uploads",
+      "path": "app/server.py",
+      "line": 56,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.uploads",
+      "path": "app/server.py",
+      "line": 56,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.server",
+      "to": "core.wrecks",
+      "path": "app/server.py",
+      "line": 57,
+      "kind": "from"
+    },
+    {
+      "from": "app.wms_cache",
+      "to": "app.config",
+      "path": "app/wms_cache.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "app.wms_cache",
+      "to": "core.config",
+      "path": "app/wms_cache.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "app.wms_cache",
+      "to": "core.settings_store",
+      "path": "app/wms_cache.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_backup",
+      "to": "core.config",
+      "path": "core/data_backup.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_backup",
+      "to": "core.data_diagnostics",
+      "path": "core/data_backup.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_diagnostics",
+      "to": "core.config",
+      "path": "core/data_diagnostics.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_diagnostics",
+      "to": "core.field_photos",
+      "path": "core/data_diagnostics.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_diagnostics",
+      "to": "core.photo_privacy",
+      "path": "core/data_diagnostics.py",
+      "line": 15,
+      "kind": "from"
+    },
+    {
+      "from": "core.data_diagnostics",
+      "to": "core.photo_privacy",
+      "path": "core/data_diagnostics.py",
+      "line": 15,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.config",
+      "path": "core/detection.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.models",
+      "path": "core/detection.py",
+      "line": 26,
+      "kind": "from"
+    },
+    {
+      "from": "core.detection",
+      "to": "core.vehicle_size",
+      "path": "core/detection.py",
+      "line": 27,
+      "kind": "from"
+    },
+    {
+      "from": "core.diagnostics",
+      "to": "core.models",
+      "path": "core/diagnostics.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.diagnostics",
+      "to": "core.models",
+      "path": "core/diagnostics.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.diagnostics",
+      "to": "core.reporter",
+      "path": "core/diagnostics.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.diagnostics",
+      "to": "core.settings_store",
+      "path": "core/diagnostics.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.enhancement",
+      "to": "core.config",
+      "path": "core/enhancement.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "core.enhancement",
+      "to": "core.config",
+      "path": "core/enhancement.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "core.enhancement",
+      "to": "core.models",
+      "path": "core/enhancement.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.config",
+      "path": "core/field_photos.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.geo",
+      "path": "core/field_photos.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.photo_privacy",
+      "path": "core/field_photos.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.field_photos",
+      "to": "core.uploads",
+      "path": "core/field_photos.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.map_crops",
+      "to": "core.config",
+      "path": "core/map_crops.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.map_crops",
+      "to": "core.geo",
+      "path": "core/map_crops.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.map_crops",
+      "to": "core.geo",
+      "path": "core/map_crops.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.photo_privacy",
+      "to": "core.config",
+      "path": "core/photo_privacy.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.photo_retention",
+      "to": "core.config",
+      "path": "core/photo_retention.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "core.photo_retention",
+      "to": "core.photo_privacy",
+      "path": "core/photo_retention.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.photo_retention",
+      "to": "core.photo_privacy",
+      "path": "core/photo_retention.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.privacy_requests",
+      "to": "core.config",
+      "path": "core/privacy_requests.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_packages",
+      "to": "core.config",
+      "path": "core/report_packages.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_packages",
+      "to": "core.photo_privacy",
+      "path": "core/report_packages.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_packages",
+      "to": "core.report_pdf",
+      "path": "core/report_packages.py",
+      "line": 19,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_packages",
+      "to": "core.report_pdf",
+      "path": "core/report_packages.py",
+      "line": 19,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_packages",
+      "to": "core.wrecks",
+      "path": "core/report_packages.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "core.report_pdf",
+      "to": "core.photo_privacy",
+      "path": "core/report_pdf.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.config",
+      "path": "core/reporter.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.geo",
+      "path": "core/reporter.py",
+      "line": 26,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.geo",
+      "path": "core/reporter.py",
+      "line": 26,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.models",
+      "path": "core/reporter.py",
+      "line": 27,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.models",
+      "path": "core/reporter.py",
+      "line": 27,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.models",
+      "path": "core/reporter.py",
+      "line": 27,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.vision",
+      "path": "core/reporter.py",
+      "line": 28,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.vision",
+      "path": "core/reporter.py",
+      "line": 28,
+      "kind": "from"
+    },
+    {
+      "from": "core.reporter",
+      "to": "core.vision",
+      "path": "core/reporter.py",
+      "line": 28,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.config",
+      "path": "core/scoring.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.models",
+      "path": "core/scoring.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.models",
+      "path": "core/scoring.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.models",
+      "path": "core/scoring.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.models",
+      "path": "core/scoring.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.models",
+      "path": "core/scoring.py",
+      "line": 29,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.scoring",
+      "to": "core.vision",
+      "path": "core/scoring.py",
+      "line": 30,
+      "kind": "from"
+    },
+    {
+      "from": "core.settings_store",
+      "to": "core.config",
+      "path": "core/settings_store.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.settings_store",
+      "to": "core.config",
+      "path": "core/settings_store.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "core.settings_store",
+      "to": "core.config",
+      "path": "core/settings_store.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "core.submission_limits",
+      "to": "core.config",
+      "path": "core/submission_limits.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "core.submission_limits",
+      "to": "core.photo_privacy",
+      "path": "core/submission_limits.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "core.vehicle_size",
+      "to": "core.config",
+      "path": "core/vehicle_size.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "core.vehicle_size",
+      "to": "core.config",
+      "path": "core/vehicle_size.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.config",
+      "path": "core/vision.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "core.vision",
+      "to": "core.models",
+      "path": "core/vision.py",
+      "line": 38,
+      "kind": "from"
+    },
+    {
+      "from": "core.wreck_photo_transfers",
+      "to": "core.config",
+      "path": "core/wreck_photo_transfers.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "core.wreck_photo_transfers",
+      "to": "core.field_photos",
+      "path": "core/wreck_photo_transfers.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "core.wreck_photo_transfers",
+      "to": "core.photo_privacy",
+      "path": "core/wreck_photo_transfers.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.wreck_photo_transfers",
+      "to": "core.photo_privacy",
+      "path": "core/wreck_photo_transfers.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.wreck_photo_transfers",
+      "to": "core.photo_privacy",
+      "path": "core/wreck_photo_transfers.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.config",
+      "path": "core/wrecks.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.geo",
+      "path": "core/wrecks.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.geo",
+      "path": "core/wrecks.py",
+      "line": 20,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.map_crops",
+      "path": "core/wrecks.py",
+      "line": 19,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 21,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.photo_privacy",
+      "path": "core/wrecks.py",
+      "line": 31,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.uploads",
+      "path": "core/wrecks.py",
+      "line": 34,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.wreck_photo_transfers",
+      "path": "core/wrecks.py",
+      "line": 35,
+      "kind": "from"
+    },
+    {
+      "from": "core.wrecks",
+      "to": "core.wreck_photo_transfers",
+      "path": "core/wrecks.py",
+      "line": 35,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_backup",
+      "path": "scripts/backup_data.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.backup_data",
+      "to": "core.data_diagnostics",
+      "path": "scripts/backup_data.py",
+      "line": 26,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.diagnose_data",
+      "to": "core.config",
+      "path": "scripts/diagnose_data.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.diagnose_data",
+      "to": "core.data_diagnostics",
+      "path": "scripts/diagnose_data.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.diagnose_data",
+      "to": "core.data_diagnostics",
+      "path": "scripts/diagnose_data.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.download_geoportal_krajowy",
+      "to": "core.geo",
+      "path": "scripts/download_geoportal_krajowy.py",
+      "line": 24,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.download_geoportal_krajowy",
+      "to": "core.runtime",
+      "path": "scripts/download_geoportal_krajowy.py",
+      "line": 25,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.download_geoportal_wfs_geotiff",
+      "to": "core.config",
+      "path": "scripts/download_geoportal_wfs_geotiff.py",
+      "line": 38,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.download_geoportal_wfs_geotiff",
+      "to": "core.runtime",
+      "path": "scripts/download_geoportal_wfs_geotiff.py",
+      "line": 39,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.download_geoportal_wfs_geotiff",
+      "to": "core.vision",
+      "path": "scripts/download_geoportal_wfs_geotiff.py",
+      "line": 40,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.retire_private_originals",
+      "to": "core.config",
+      "path": "scripts/retire_private_originals.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "scripts.retire_private_originals",
+      "to": "core.photo_retention",
+      "path": "scripts/retire_private_originals.py",
+      "line": 18,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_cadastral",
+      "to": "core.cadastral",
+      "path": "tests/test_cadastral.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_cadastral",
+      "to": "core.cadastral",
+      "path": "tests/test_cadastral.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_config_contracts",
+      "to": "app.config",
+      "path": "tests/test_config_contracts.py",
+      "line": 5,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_config_contracts",
+      "to": "core.config",
+      "path": "tests/test_config_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_config_contracts",
+      "to": "core.vehicle_size",
+      "path": "tests/test_config_contracts.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_backup",
+      "to": "core.data_backup",
+      "path": "tests/test_data_backup.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_backup",
+      "to": "core.data_backup",
+      "path": "tests/test_data_backup.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_backup",
+      "to": "core.data_backup",
+      "path": "tests/test_data_backup.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_backup",
+      "to": "core.data_backup",
+      "path": "tests/test_data_backup.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_backup",
+      "to": "core.data_backup",
+      "path": "tests/test_data_backup.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_diagnostics",
+      "to": "core.data_diagnostics",
+      "path": "tests/test_data_diagnostics.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_data_diagnostics",
+      "to": "core.data_diagnostics",
+      "path": "tests/test_data_diagnostics.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_download_geoportal_wfs_geotiff",
+      "to": "scripts.download_geoportal_wfs_geotiff",
+      "path": "tests/test_download_geoportal_wfs_geotiff.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.config",
+      "path": "tests/test_field_photos.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.field_photos",
+      "path": "tests/test_field_photos.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.field_photos",
+      "path": "tests/test_field_photos.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.field_photos",
+      "path": "tests/test_field_photos.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.field_photos",
+      "path": "tests/test_field_photos.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_field_photos",
+      "to": "core.uploads",
+      "path": "tests/test_field_photos.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_photo_retention",
+      "to": "core.data_diagnostics",
+      "path": "tests/test_photo_retention.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_photo_retention",
+      "to": "core.photo_retention",
+      "path": "tests/test_photo_retention.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.config",
+      "path": "tests/test_report_packages.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.config",
+      "path": "tests/test_report_packages.py",
+      "line": 13,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_packages",
+      "path": "tests/test_report_packages.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.report_pdf",
+      "path": "tests/test_report_packages.py",
+      "line": 11,
+      "kind": "import"
+    },
+    {
+      "from": "tests.test_report_packages",
+      "to": "core.wrecks",
+      "path": "tests/test_report_packages.py",
+      "line": 22,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_reporter_contracts",
+      "to": "core.models",
+      "path": "tests/test_reporter_contracts.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_reporter_contracts",
+      "to": "core.models",
+      "path": "tests/test_reporter_contracts.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_reporter_contracts",
+      "to": "core.models",
+      "path": "tests/test_reporter_contracts.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_reporter_contracts",
+      "to": "core.reporter",
+      "path": "tests/test_reporter_contracts.py",
+      "line": 9,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_runtime_contracts",
+      "to": "core.runtime",
+      "path": "tests/test_runtime_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_runtime_contracts",
+      "to": "core.runtime",
+      "path": "tests/test_runtime_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_runtime_contracts",
+      "to": "core.runtime",
+      "path": "tests/test_runtime_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_runtime_contracts",
+      "to": "core.runtime",
+      "path": "tests/test_runtime_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_runtime_contracts",
+      "to": "core.runtime",
+      "path": "tests/test_runtime_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.models",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.models",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.scoring",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.scoring",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.scoring",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_scoring_contracts",
+      "to": "core.scoring",
+      "path": "tests/test_scoring_contracts.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "app.config",
+      "path": "tests/test_server_contracts.py",
+      "line": 14,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "app.map_downloads",
+      "path": "tests/test_server_contracts.py",
+      "line": 15,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "app.pipeline",
+      "path": "tests/test_server_contracts.py",
+      "line": 15,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "app.server",
+      "path": "tests/test_server_contracts.py",
+      "line": 12,
+      "kind": "import"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "app.wms_cache",
+      "path": "tests/test_server_contracts.py",
+      "line": 15,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "core.config",
+      "path": "tests/test_server_contracts.py",
+      "line": 16,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "core.report_packages",
+      "path": "tests/test_server_contracts.py",
+      "line": 17,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_server_contracts",
+      "to": "core.settings_store",
+      "path": "tests/test_server_contracts.py",
+      "line": 13,
+      "kind": "import"
+    },
+    {
+      "from": "tests.test_settings_store",
+      "to": "core.config",
+      "path": "tests/test_settings_store.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_settings_store",
+      "to": "core.settings_store",
+      "path": "tests/test_settings_store.py",
+      "line": 6,
+      "kind": "import"
+    },
+    {
+      "from": "tests.test_settings_store",
+      "to": "core.settings_store",
+      "path": "tests/test_settings_store.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_settings_store",
+      "to": "core.settings_store",
+      "path": "tests/test_settings_store.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_settings_store",
+      "to": "core.settings_store",
+      "path": "tests/test_settings_store.py",
+      "line": 8,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_submission_limits",
+      "to": "core.submission_limits",
+      "path": "tests/test_submission_limits.py",
+      "line": 6,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_surface",
+      "to": "core.surface",
+      "path": "tests/test_surface.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_surface",
+      "to": "core.surface",
+      "path": "tests/test_surface.py",
+      "line": 7,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_vision_contracts",
+      "to": "core.vision",
+      "path": "tests/test_vision_contracts.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_vision_contracts",
+      "to": "core.vision",
+      "path": "tests/test_vision_contracts.py",
+      "line": 3,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.config",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 10,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.uploads",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 11,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    },
+    {
+      "from": "tests.test_wrecks_contracts",
+      "to": "core.wrecks",
+      "path": "tests/test_wrecks_contracts.py",
+      "line": 12,
+      "kind": "from"
+    }
+  ],
+  "dependency_cycles": [],
+  "http_endpoints": [
+    {
+      "path": "/",
+      "source": "app/map_downloads.py",
+      "line": 435,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_safe_geotiff_cache_file_name",
+        "download_maps"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 710,
+      "method_hint": "HTTP",
+      "contexts": [
+        "translate_path",
+        "_handle_wms_proxy",
+        "_handle_public_wreck_asset",
+        "_report_package_wreck_id",
+        "_public_report_package_wreck_id",
+        "_wreck_photo_upload_wreck_id",
+        "_wreck_field_photo_attach_wreck_id",
+        "_wreck_index_wreck_id",
+        "_field_photo_asset_route",
+        "_admin_photo_original_route",
+        "_admin_photo_review_route",
+        "_admin_photo_delete_route",
+        "_admin_wreck_review_route",
+        "_report_package_asset_route",
+        "_public_report_package_asset_route"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 755,
+      "method_hint": "HEAD",
+      "contexts": [
+        "do_HEAD"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 906,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 935,
+      "method_hint": "DELETE",
+      "contexts": [
+        "do_DELETE"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 1000,
+      "method_hint": "PATCH",
+      "contexts": [
+        "do_PATCH"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "app/server.py",
+      "line": 1528,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/data_diagnostics.py",
+      "line": 49,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_is_safe_relative_path"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/field_photos.py",
+      "line": 274,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_public_file_url"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/photo_privacy.py",
+      "line": 27,
+      "method_hint": "HTTP",
+      "contexts": [
+        "safe_child",
+        "private_original_rel"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/photo_retention.py",
+      "line": 58,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_retained_private_rel"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/privacy_requests.py",
+      "line": 46,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_safe_request_id"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/report_packages.py",
+      "line": 601,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_write_zip",
+        "create_report_package",
+        "create_public_report_package",
+        "_archive_public_evidence_photos"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/wreck_photo_transfers.py",
+      "line": 100,
+      "method_hint": "HTTP",
+      "contexts": [
+        "move_field_photo_to_wreck"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "core/wrecks.py",
+      "line": 56,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_private_original_rel",
+        "_wreck_public_file_url",
+        "_generate_wreck_public_derivatives",
+        "_evidence_previews",
+        "public_wreck_asset",
+        "_render_record_html",
+        "list_wreck_photo_review_items"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "scripts/diagnose_architecture.py",
+      "line": 264,
+      "method_hint": "HTTP",
+      "contexts": [
+        "collect_endpoints"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "scripts/download_geoportal_krajowy.py",
+      "line": 119,
+      "method_hint": "HTTP",
+      "contexts": [
+        "main"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "scripts/download_geoportal_wfs_geotiff.py",
+      "line": 534,
+      "method_hint": "HTTP",
+      "contexts": [
+        "write_reports"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "scripts/retire_private_originals.py",
+      "line": 55,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_format"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "tests/test_data_diagnostics.py",
+      "line": 91,
+      "method_hint": "HTTP",
+      "contexts": [
+        "write_wreck_with_attached_photo"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "tests/test_photo_retention.py",
+      "line": 210,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_replaces_old_approved_wreck_photo_in_main_and_photo_records"
+      ]
+    },
+    {
+      "path": "/",
+      "source": "tests/test_wrecks_contracts.py",
+      "line": 111,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_save_wreck_creates_record_evidence_and_dedupes_same_evidence"
+      ]
+    },
+    {
+      "path": "/api/",
+      "source": "scripts/diagnose_architecture.py",
+      "line": 264,
+      "method_hint": "HTTP",
+      "contexts": [
+        "collect_endpoints"
+      ]
+    },
+    {
+      "path": "/api/admin/geotiff-cache",
+      "source": "app/server.py",
+      "line": 793,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/geotiff-cache",
+      "source": "web/config.js",
+      "line": 26,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/geotiff-cache/",
+      "source": "app/server.py",
+      "line": 932,
+      "method_hint": "DELETE",
+      "contexts": [
+        "do_DELETE"
+      ]
+    },
+    {
+      "path": "/api/admin/geotiff-cache/",
+      "source": "tests/test_server_contracts.py",
+      "line": 283,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_delete_geotiff_cache_file_removes_named_file"
+      ]
+    },
+    {
+      "path": "/api/admin/geotiff-cache/../secret.tif",
+      "source": "tests/test_server_contracts.py",
+      "line": 304,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_delete_geotiff_cache_file_rejects_path_traversal"
+      ]
+    },
+    {
+      "path": "/api/admin/geotiff-cache/79810_131924_M-33-35-A-d-3-3.tif",
+      "source": "tests/test_server_contracts.py",
+      "line": 268,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_delete_geotiff_cache_file_requires_admin"
+      ]
+    },
+    {
+      "path": "/api/admin/login",
+      "source": "app/server.py",
+      "line": 1231,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/admin/login",
+      "source": "tests/test_server_contracts.py",
+      "line": 345,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_admin_cookie_is_secure_on_public_hosts_but_not_localhost"
+      ]
+    },
+    {
+      "path": "/api/admin/login",
+      "source": "web/config.js",
+      "line": 22,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/logout",
+      "source": "app/server.py",
+      "line": 1234,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/admin/logout",
+      "source": "web/config.js",
+      "line": 23,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/photo-retention",
+      "source": "app/server.py",
+      "line": 808,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/photo-retention",
+      "source": "tests/test_server_contracts.py",
+      "line": 590,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_admin_can_view_and_run_photo_retention"
+      ]
+    },
+    {
+      "path": "/api/admin/photo-retention",
+      "source": "web/config.js",
+      "line": 28,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/photo-retention/run",
+      "source": "app/server.py",
+      "line": 1245,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/admin/photo-retention/run",
+      "source": "tests/test_server_contracts.py",
+      "line": 593,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_admin_can_view_and_run_photo_retention"
+      ]
+    },
+    {
+      "path": "/api/admin/photos",
+      "source": "app/server.py",
+      "line": 787,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/photos",
+      "source": "web/config.js",
+      "line": 24,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/photos/field/",
+      "source": "core/field_photos.py",
+      "line": 343,
+      "method_hint": "HTTP",
+      "contexts": [
+        "list_field_photo_review_items"
+      ]
+    },
+    {
+      "path": "/api/admin/photos/field/",
+      "source": "tests/test_server_contracts.py",
+      "line": 1175,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_field_photo_list_assets_are_public_and_delete_requires_admin",
+        "test_field_photo_location_patch_requires_admin_and_updates_record"
+      ]
+    },
+    {
+      "path": "/api/admin/photos/wreck/",
+      "source": "core/wrecks.py",
+      "line": 514,
+      "method_hint": "HTTP",
+      "contexts": [
+        "list_wreck_photo_review_items"
+      ]
+    },
+    {
+      "path": "/api/admin/photos/wreck/wreck_51100000_17200000/",
+      "source": "tests/test_server_contracts.py",
+      "line": 934,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_wreck_photo_upload_allows_public_pending_and_admin_review"
+      ]
+    },
+    {
+      "path": "/api/admin/photos?status=all&scope=field&ids=",
+      "source": "tests/test_server_contracts.py",
+      "line": 1186,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_field_photo_list_assets_are_public_and_delete_requires_admin"
+      ]
+    },
+    {
+      "path": "/api/admin/photos?status=all&scope=field&ids=missing-photo",
+      "source": "tests/test_server_contracts.py",
+      "line": 1190,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_field_photo_list_assets_are_public_and_delete_requires_admin"
+      ]
+    },
+    {
+      "path": "/api/admin/privacy-requests",
+      "source": "app/server.py",
+      "line": 796,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/privacy-requests",
+      "source": "tests/test_server_contracts.py",
+      "line": 538,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/api/admin/privacy-requests",
+      "source": "web/config.js",
+      "line": 27,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/privacy-requests/",
+      "source": "tests/test_server_contracts.py",
+      "line": 550,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/api/admin/privacy-requests?status=in_progress",
+      "source": "tests/test_server_contracts.py",
+      "line": 560,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/api/admin/status",
+      "source": "app/server.py",
+      "line": 784,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/status",
+      "source": "web/config.js",
+      "line": 21,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/admin/wrecks",
+      "source": "app/server.py",
+      "line": 790,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/admin/wrecks",
+      "source": "web/config.js",
+      "line": 25,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/analyze",
+      "source": "app/server.py",
+      "line": 1537,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/analyze",
+      "source": "tests/test_server_contracts.py",
+      "line": 755,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_public_feature_settings_block_public_scan_and_manual_wrecks"
+      ]
+    },
+    {
+      "path": "/api/analyze",
+      "source": "web/config.js",
+      "line": 15,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/cadastral/identify",
+      "source": "app/server.py",
+      "line": 819,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/cadastral/identify",
+      "source": "web/config.js",
+      "line": 19,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/cadastral/identify?lat=51.089742&lon=17.038940",
+      "source": "tests/test_server_contracts.py",
+      "line": 319,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_cadastral_identify_uses_fixed_upstream_and_returns_parcel_json"
+      ]
+    },
+    {
+      "path": "/api/cadastral/identify?lat=abc&lon=17",
+      "source": "tests/test_server_contracts.py",
+      "line": 334,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_cadastral_identify_rejects_invalid_coordinates"
+      ]
+    },
+    {
+      "path": "/api/download",
+      "source": "app/server.py",
+      "line": 1410,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/download",
+      "source": "tests/test_server_contracts.py",
+      "line": 391,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_download_response_counts_all_non_cache_wfs_sources_as_downloaded",
+        "test_download_rejects_concurrent_pipeline",
+        "test_download_rejects_oversized_area",
+        "test_public_feature_settings_block_public_scan_and_manual_wrecks"
+      ]
+    },
+    {
+      "path": "/api/download",
+      "source": "web/config.js",
+      "line": 13,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/download/progress",
+      "source": "app/server.py",
+      "line": 284,
+      "method_hint": "HTTP",
+      "contexts": [
+        "log_message"
+      ]
+    },
+    {
+      "path": "/api/download/progress",
+      "source": "app/server.py",
+      "line": 816,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/download/progress",
+      "source": "web/config.js",
+      "line": 14,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/field-photos",
+      "source": "app/server.py",
+      "line": 837,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/field-photos",
+      "source": "app/server.py",
+      "line": 1364,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/field-photos",
+      "source": "tests/test_server_contracts.py",
+      "line": 1082,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_public_feature_settings_block_public_field_photo_uploads",
+        "test_field_photo_layer_visibility_filters_guest_api_only",
+        "test_field_photo_upload_allows_public_pending_submission",
+        "test_field_photo_list_assets_are_public_and_delete_requires_admin",
+        "test_field_photo_location_patch_requires_admin_and_updates_record",
+        "test_field_photos_can_be_moved_to_wreck_folder_and_removed_from_field_layer",
+        "test_non_vehicle_field_photos_cannot_be_moved_to_wreck_folder"
+      ]
+    },
+    {
+      "path": "/api/field-photos",
+      "source": "web/config.js",
+      "line": 18,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/field-photos/",
+      "source": "app/server.py",
+      "line": 949,
+      "method_hint": "DELETE",
+      "contexts": [
+        "do_DELETE"
+      ]
+    },
+    {
+      "path": "/api/field-photos/",
+      "source": "core/field_photos.py",
+      "line": 274,
+      "method_hint": "HTTP",
+      "contexts": [
+        "_public_file_url"
+      ]
+    },
+    {
+      "path": "/api/field-photos/",
+      "source": "tests/test_server_contracts.py",
+      "line": 1167,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_field_photo_list_assets_are_public_and_delete_requires_admin",
+        "test_field_photo_location_patch_requires_admin_and_updates_record"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "source": "app/server.py",
+      "line": 781,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/inspect",
+      "source": "app/server.py",
+      "line": 1499,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/inspect",
+      "source": "web/app.js",
+      "line": 4547,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/privacy-requests",
+      "source": "app/server.py",
+      "line": 1237,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/privacy-requests",
+      "source": "tests/test_server_contracts.py",
+      "line": 531,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/api/public-report-packages/",
+      "source": "core/report_packages.py",
+      "line": 750,
+      "method_hint": "HTTP",
+      "contexts": [
+        "create_public_report_package"
+      ]
+    },
+    {
+      "path": "/api/public-report-packages/",
+      "source": "tests/test_report_packages.py",
+      "line": 270,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_create_public_report_package_uses_clean_assets_and_token"
+      ]
+    },
+    {
+      "path": "/api/public-report-packages/",
+      "source": "tests/test_server_contracts.py",
+      "line": 671,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_public_report_package_generates_clean_tokenized_download"
+      ]
+    },
+    {
+      "path": "/api/report-packages/",
+      "source": "core/report_packages.py",
+      "line": 686,
+      "method_hint": "HTTP",
+      "contexts": [
+        "create_report_package"
+      ]
+    },
+    {
+      "path": "/api/report-packages/",
+      "source": "tests/test_report_packages.py",
+      "line": 168,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_create_report_package_generates_zip_and_keeps_record_without_reporter_data",
+        "test_create_report_package_accepts_manual_wreck_with_map_crops"
+      ]
+    },
+    {
+      "path": "/api/report-packages/",
+      "source": "tests/test_server_contracts.py",
+      "line": 846,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_report_package_endpoint_accepts_multipart_and_generates_zip"
+      ]
+    },
+    {
+      "path": "/api/settings",
+      "source": "app/server.py",
+      "line": 813,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/settings",
+      "source": "app/server.py",
+      "line": 1401,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/settings",
+      "source": "tests/test_server_contracts.py",
+      "line": 245,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_post_settings_rejects_non_object_payload",
+        "test_post_settings_requires_admin_session",
+        "test_post_settings_accepts_no_limit_cache",
+        "test_post_settings_accepts_public_layer_visibility",
+        "test_post_settings_accepts_public_feature_access"
+      ]
+    },
+    {
+      "path": "/api/settings",
+      "source": "web/config.js",
+      "line": 16,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/surface/features",
+      "source": "app/server.py",
+      "line": 822,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/surface/features",
+      "source": "web/config.js",
+      "line": 20,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/wrecks",
+      "source": "app/server.py",
+      "line": 834,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/api/wrecks",
+      "source": "app/server.py",
+      "line": 1625,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/api/wrecks",
+      "source": "tests/test_server_contracts.py",
+      "line": 710,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_save_wreck_endpoint_is_public",
+        "test_manual_wreck_endpoint_accepts_map_coordinates",
+        "test_public_feature_settings_block_public_scan_and_manual_wrecks",
+        "test_admin_session_bypasses_public_feature_blocks",
+        "test_wreck_layer_visibility_filters_guest_api_only"
+      ]
+    },
+    {
+      "path": "/api/wrecks",
+      "source": "web/config.js",
+      "line": 17,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/api/wrecks/",
+      "source": "app/server.py",
+      "line": 967,
+      "method_hint": "DELETE",
+      "contexts": [
+        "do_DELETE"
+      ]
+    },
+    {
+      "path": "/api/wrecks/wreck_51100000_17200000/field-photos/attach",
+      "source": "tests/test_server_contracts.py",
+      "line": 1326,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_field_photos_can_be_moved_to_wreck_folder_and_removed_from_field_layer",
+        "test_non_vehicle_field_photos_cannot_be_moved_to_wreck_folder"
+      ]
+    },
+    {
+      "path": "/api/wrecks/wreck_51100000_17200000/photos",
+      "source": "tests/test_server_contracts.py",
+      "line": 876,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_wreck_photo_upload_allows_public_pending_and_admin_review",
+        "test_public_feature_settings_block_public_wreck_photo_uploads"
+      ]
+    },
+    {
+      "path": "/api/wrecks/wreck_51100000_17200000/public-report-package",
+      "source": "tests/test_server_contracts.py",
+      "line": 657,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_public_report_package_generates_clean_tokenized_download",
+        "test_public_feature_settings_block_public_report_package_photo_uploads"
+      ]
+    },
+    {
+      "path": "/api/wrecks/wreck_51100000_17200000/report-package",
+      "source": "tests/test_server_contracts.py",
+      "line": 623,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_report_package_requires_admin_before_form_validation",
+        "test_report_package_endpoint_accepts_multipart_and_generates_zip"
+      ]
+    },
+    {
+      "path": "/privacy",
+      "source": "app/server.py",
+      "line": 736,
+      "method_hint": "HEAD",
+      "contexts": [
+        "do_HEAD"
+      ]
+    },
+    {
+      "path": "/privacy",
+      "source": "app/server.py",
+      "line": 762,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/privacy",
+      "source": "scripts/diagnose_architecture.py",
+      "line": 264,
+      "method_hint": "HTTP",
+      "contexts": [
+        "collect_endpoints"
+      ]
+    },
+    {
+      "path": "/privacy",
+      "source": "tests/test_server_contracts.py",
+      "line": 510,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/report",
+      "source": "app/server.py",
+      "line": 739,
+      "method_hint": "HEAD",
+      "contexts": [
+        "do_HEAD"
+      ]
+    },
+    {
+      "path": "/report",
+      "source": "app/server.py",
+      "line": 765,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/report",
+      "source": "scripts/diagnose_architecture.py",
+      "line": 264,
+      "method_hint": "HTTP",
+      "contexts": [
+        "collect_endpoints"
+      ]
+    },
+    {
+      "path": "/report",
+      "source": "tests/test_server_contracts.py",
+      "line": 512,
+      "method_hint": "HTTP",
+      "contexts": [
+        "test_privacy_pages_and_report_request_queue"
+      ]
+    },
+    {
+      "path": "/report",
+      "source": "web/i18n.js",
+      "line": 21,
+      "method_hint": "JS",
+      "contexts": []
+    },
+    {
+      "path": "/report.html",
+      "source": "app/server.py",
+      "line": 1605,
+      "method_hint": "POST",
+      "contexts": [
+        "do_POST"
+      ]
+    },
+    {
+      "path": "/wms_proxy/",
+      "source": "app/server.py",
+      "line": 284,
+      "method_hint": "HTTP",
+      "contexts": [
+        "log_message",
+        "_handle_wms_proxy"
+      ]
+    },
+    {
+      "path": "/wms_proxy/",
+      "source": "app/server.py",
+      "line": 903,
+      "method_hint": "GET",
+      "contexts": [
+        "do_GET"
+      ]
+    },
+    {
+      "path": "/wms_proxy/",
+      "source": "scripts/diagnose_architecture.py",
+      "line": 264,
+      "method_hint": "HTTP",
+      "contexts": [
+        "collect_endpoints"
+      ]
+    }
+  ],
+  "risky_patterns": {
+    "broad_excepts": [
+      {
+        "path": "app/map_downloads.py",
+        "line": 392,
+        "type": "Exception"
+      },
+      {
+        "path": "app/map_downloads.py",
+        "line": 196,
+        "type": "Exception"
+      },
+      {
+        "path": "app/map_downloads.py",
+        "line": 326,
+        "type": "Exception"
+      },
+      {
+        "path": "app/map_downloads.py",
+        "line": 474,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 170,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 566,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 679,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 705,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1178,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1199,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 199,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 752,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 778,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 829,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 853,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 866,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 884,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 900,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 928,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 945,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 963,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 988,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1015,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1045,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1064,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1077,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1123,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1242,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1255,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1284,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1309,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1330,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1361,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1398,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1408,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1494,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1535,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1622,
+        "type": "Exception"
+      },
+      {
+        "path": "app/server.py",
+        "line": 1665,
+        "type": "Exception"
+      },
+      {
+        "path": "core/detection.py",
+        "line": 38,
+        "type": "Exception"
+      },
+      {
+        "path": "core/detection.py",
+        "line": 58,
+        "type": "Exception"
+      },
+      {
+        "path": "core/field_photos.py",
+        "line": 113,
+        "type": "Exception"
+      },
+      {
+        "path": "core/surface.py",
+        "line": 285,
+        "type": "Exception"
+      },
+      {
+        "path": "core/vision.py",
+        "line": 122,
+        "type": "Exception"
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 46,
+        "type": "Exception"
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 84,
+        "type": "Exception"
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 263,
+        "type": "Exception"
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 564,
+        "type": "Exception"
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 615,
+        "type": "Exception"
+      }
+    ],
+    "shell_true": [],
+    "dynamic_code": [],
+    "pickle_usage": [],
+    "print_calls": [
+      {
+        "path": "app/analyze.py",
+        "line": 96
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 111
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 119
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 166
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 91
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 128
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 116
+      },
+      {
+        "path": "app/analyze.py",
+        "line": 134
+      },
+      {
+        "path": "app/map_downloads.py",
+        "line": 620
+      },
+      {
+        "path": "app/map_downloads.py",
+        "line": 601
+      },
+      {
+        "path": "app/server.py",
+        "line": 1686
+      },
+      {
+        "path": "app/server.py",
+        "line": 1687
+      },
+      {
+        "path": "app/server.py",
+        "line": 1689
+      },
+      {
+        "path": "app/server.py",
+        "line": 1693
+      },
+      {
+        "path": "app/server.py",
+        "line": 1201
+      },
+      {
+        "path": "app/server.py",
+        "line": 1677
+      },
+      {
+        "path": "app/server.py",
+        "line": 1682
+      },
+      {
+        "path": "app/server.py",
+        "line": 1683
+      },
+      {
+        "path": "app/server.py",
+        "line": 200
+      },
+      {
+        "path": "app/server.py",
+        "line": 1434
+      },
+      {
+        "path": "app/server.py",
+        "line": 1578
+      },
+      {
+        "path": "app/wms_cache.py",
+        "line": 75
+      },
+      {
+        "path": "app/wms_cache.py",
+        "line": 120
+      },
+      {
+        "path": "core/detection.py",
+        "line": 60
+      },
+      {
+        "path": "core/enhancement.py",
+        "line": 59
+      },
+      {
+        "path": "core/enhancement.py",
+        "line": 56
+      },
+      {
+        "path": "core/enhancement.py",
+        "line": 65
+      },
+      {
+        "path": "core/scoring.py",
+        "line": 121
+      },
+      {
+        "path": "core/vision.py",
+        "line": 144
+      },
+      {
+        "path": "core/vision.py",
+        "line": 148
+      },
+      {
+        "path": "core/vision.py",
+        "line": 125
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 99
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 100
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 101
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 106
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 83
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 103
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 108
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 109
+      },
+      {
+        "path": "scripts/backup_data.py",
+        "line": 105
+      },
+      {
+        "path": "scripts/diagnose_architecture.py",
+        "line": 605
+      },
+      {
+        "path": "scripts/diagnose_architecture.py",
+        "line": 607
+      },
+      {
+        "path": "scripts/diagnose_data.py",
+        "line": 49
+      },
+      {
+        "path": "scripts/diagnose_data.py",
+        "line": 51
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 118
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 119
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 121
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 123
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 169
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 47
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 107
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 143
+      },
+      {
+        "path": "scripts/download_geoportal_krajowy.py",
+        "line": 155
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 624
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 560
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 626
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 579
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 628
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 630
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 568
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 589
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 591
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 612
+      },
+      {
+        "path": "scripts/download_geoportal_wfs_geotiff.py",
+        "line": 618
+      },
+      {
+        "path": "scripts/retire_private_originals.py",
+        "line": 70
+      },
+      {
+        "path": "scripts/retire_private_originals.py",
+        "line": 72
+      }
+    ],
+    "console_calls": [
+      {
+        "path": "web/app.js",
+        "line": 62,
+        "snippet": "console.warn('Nie udało się odczytać ustawienia warstwy działek.', err);"
+      },
+      {
+        "path": "web/app.js",
+        "line": 263,
+        "snippet": "console.warn('Nie udało się zapisać ustawienia warstwy działek.', err);"
+      },
+      {
+        "path": "web/app.js",
+        "line": 403,
+        "snippet": "console.warn('Nie udało się pobrać warstwy nawierzchni.', err);"
+      },
+      {
+        "path": "web/map_helpers.js",
+        "line": 38,
+        "snippet": "console.warn('Nie udało się odczytać zapisanej pozycji mapy.', err);"
+      },
+      {
+        "path": "web/map_helpers.js",
+        "line": 52,
+        "snippet": "console.warn('Nie udało się zapisać pozycji mapy.', err);"
+      }
+    ]
+  },
+  "group_dependencies": [
+    {
+      "from": "app",
+      "to": "app",
+      "count": 7
+    },
+    {
+      "from": "app",
+      "to": "core",
+      "count": 92
+    },
+    {
+      "from": "app",
+      "to": "scripts",
+      "count": 11
+    },
+    {
+      "from": "core",
+      "to": "core",
+      "count": 155
+    },
+    {
+      "from": "scripts",
+      "to": "core",
+      "count": 19
+    }
+  ],
+  "tool_availability": [
+    {
+      "command": "python",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/python",
+      "version": "3.13.5"
+    },
+    {
+      "command": "git",
+      "available": true,
+      "path": "/usr/bin/git",
+      "returncode": 0,
+      "version": "git version 2.47.3"
+    },
+    {
+      "command": "pytest",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/pytest",
+      "returncode": 0,
+      "version": "pytest 9.0.3"
+    },
+    {
+      "command": "ruff",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/ruff",
+      "returncode": 0,
+      "version": "ruff 0.15.16"
+    },
+    {
+      "command": "bandit",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/bandit",
+      "returncode": 0,
+      "version": "bandit 1.9.4"
+    },
+    {
+      "command": "pip-audit",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/pip-audit",
+      "returncode": 0,
+      "version": "pip-audit 2.10.0"
+    },
+    {
+      "command": "radon",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/python -m radon",
+      "returncode": 0,
+      "version": "6.0.1"
+    },
+    {
+      "command": "vulture",
+      "available": true,
+      "path": "/home/test/Desktop/WreckScanner/.venv-audit/bin/vulture",
+      "returncode": 0,
+      "version": "vulture 2.16"
+    },
+    {
+      "command": "node",
+      "available": false
+    },
+    {
+      "command": "npm",
+      "available": false
+    }
+  ],
+  "last_run_log": {
+    "path": "analiza/run_log.json",
+    "generated_at": "2026-06-09T15:39:52Z",
+    "status": "ok",
+    "candidate_count": 10,
+    "image_count": 6,
+    "analysis_seconds": 42.947
+  },
+  "parse_errors": []
+}
