@@ -234,12 +234,12 @@ The script prefers `.venv/bin/python` when available, compiles Python modules, r
 | **Mapillary** | 2014–present | crowdsourced |
 | **Street View / Apple Maps** | varies | manual verification |
 
-**WMS endpoints:**
+**WMS/WMTS endpoints:**
 - `https://gis1.um.wroc.pl/arcgis/services/ogc/OGC_ortofoto_{year}/MapServer/WMSServer`
-- `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution`
+- `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution`
 - `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/Archiwalne`
 
-`StandardResolution` is used only as a public preview source in the bottom slider. `HighResolution` is not listed separately because it duplicated the Wrocław 2024 base imagery for the tested area. Geoportal TrueOrtho is not listed because, in the current Leaflet/EPSG:3857 map setup, it returned blank tiles for the tested points.
+`StandardResolution` is used only as a public WMTS preview source in the bottom slider. `HighResolution` is not listed separately because it duplicated the Wrocław 2024 base imagery for the tested area. Geoportal TrueOrtho is not listed because, in the current Leaflet/EPSG:3857 map setup, it returned blank tiles for the tested points.
 
 **WFS → GeoTIFF cache:**
 

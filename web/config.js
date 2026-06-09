@@ -49,6 +49,12 @@ const PUBLIC_FEATURE_KEYS = {
 // frontend steruje tutaj wyłącznie podglądem w Leaflet.
 const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const CARTO_LABELS_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png';
+const GEOPORTAL_STANDARD_WMTS_TILE_URL =
+    'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution' +
+    '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
+    '&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg' +
+    '&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}' +
+    '&TILEROW={y}&TILECOL={x}';
 const MAP_SOURCES = [
     { key: 'wroclaw-2020', shortLabel: '2020', label: 'Wrocław 2020', type: 'wroclaw', year: 2020 },
     { key: 'wroclaw-2021', shortLabel: '2021', label: 'Wrocław 2021', type: 'wroclaw', year: 2021 },
@@ -60,10 +66,9 @@ const MAP_SOURCES = [
         key: 'geoportal-standard',
         shortLabel: 'STND',
         label: 'Geoportal standard',
-        type: 'wms',
-        url: 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution',
-        layers: 'Raster',
-        version: '1.3.0',
+        type: 'tile',
+        url: GEOPORTAL_STANDARD_WMTS_TILE_URL,
+        maxNativeZoom: 19,
         attribution: 'Geoportal.gov.pl / GUGiK',
     },
     {
