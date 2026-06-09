@@ -960,78 +960,78 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         super().do_HEAD()
 
-    def do_GET(self):
-        path = unquote(urlsplit(self.path).path)
+    def _handle_web_page_get(self, path: str) -> bool:
         if path == "/privacy":
             self._send_web_file("privacy.html")
-            return
+            return True
         if path == "/report":
             self._send_web_file("report.html")
-            return
+            return True
+        return False
+
+    def _handle_wreck_index_get(self, path: str) -> bool:
         wreck_index_wreck_id = self._wreck_index_wreck_id(path)
-        if wreck_index_wreck_id:
-            self._handle_wreck_index(wreck_index_wreck_id)
-            return
-        if path == "/api/health":
-            self._handle_health()
-            return
-        if path == "/api/admin/status":
-            self._handle_admin_status()
-            return
-        if path == "/api/admin/photos":
-            self._handle_admin_photos()
-            return
-        if path == "/api/admin/wrecks":
-            self._handle_admin_wrecks()
-            return
-        if path == "/api/admin/geotiff-cache":
-            self._handle_admin_geotiff_cache()
-            return
-        if path == "/api/admin/privacy-requests":
-            self._handle_admin_privacy_requests()
-            return
-        if path == "/api/admin/photo-retention":
-            self._handle_photo_retention_status()
-            return
-        if path == "/api/settings":
-            self._handle_get_settings()
-            return
-        if path == "/api/download/progress":
-            self._handle_download_progress()
-            return
-        if path == "/api/cadastral/identify":
-            self._handle_cadastral_identify()
-            return
-        if path == "/api/surface/features":
-            self._handle_surface_features()
-            return
-        if path == "/api/wrecks":
-            self._handle_get_wrecks()
-            return
-        if path == "/api/field-photos":
-            self._handle_field_photos()
-            return
-        report_package_route = self._report_package_asset_route(path)
-        if report_package_route:
-            self._handle_report_package_asset(report_package_route)
-            return
-        public_report_package_route = self._public_report_package_asset_route(path)
-        if public_report_package_route:
-            self._handle_public_report_package_asset(public_report_package_route)
-            return
-        admin_photo_original_route = self._admin_photo_original_route(path)
-        if admin_photo_original_route:
-            self._handle_admin_photo_original(admin_photo_original_route)
-            return
-        field_photo_asset_route = self._field_photo_asset_route(path)
-        if field_photo_asset_route:
-            self._handle_field_photo_asset(field_photo_asset_route)
-            return
+        if not wreck_index_wreck_id:
+            return False
+        self._handle_wreck_index(wreck_index_wreck_id)
+        return True
+
+    def _handle_static_api_get(self, path: str) -> bool:
+        handlers = {
+            "/api/health": self._handle_health,
+            "/api/admin/status": self._handle_admin_status,
+            "/api/admin/photos": self._handle_admin_photos,
+            "/api/admin/wrecks": self._handle_admin_wrecks,
+            "/api/admin/geotiff-cache": self._handle_admin_geotiff_cache,
+            "/api/admin/privacy-requests": self._handle_admin_privacy_requests,
+            "/api/admin/photo-retention": self._handle_photo_retention_status,
+            "/api/settings": self._handle_get_settings,
+            "/api/download/progress": self._handle_download_progress,
+            "/api/cadastral/identify": self._handle_cadastral_identify,
+            "/api/surface/features": self._handle_surface_features,
+            "/api/wrecks": self._handle_get_wrecks,
+            "/api/field-photos": self._handle_field_photos,
+        }
+        handler = handlers.get(path)
+        if handler is None:
+            return False
+        handler()
+        return True
+
+    def _handle_dynamic_api_get(self, path: str) -> bool:
+        route_handlers = (
+            (self._report_package_asset_route, self._handle_report_package_asset),
+            (self._public_report_package_asset_route, self._handle_public_report_package_asset),
+            (self._admin_photo_original_route, self._handle_admin_photo_original),
+            (self._field_photo_asset_route, self._handle_field_photo_asset),
+        )
+        for route_from_path, handler in route_handlers:
+            route = route_from_path(path)
+            if route:
+                handler(route)
+                return True
+        return False
+
+    def _handle_passthrough_get(self, path: str) -> bool:
         if self.path.startswith("/wms_proxy/"):
             self._handle_wms_proxy()
-            return
+            return True
         if path.startswith(f"/{config.WRECKS_ROUTE}/"):
             self._handle_public_wreck_asset(path)
+            return True
+        return False
+
+    def do_GET(self):
+        path = unquote(urlsplit(self.path).path)
+        if self._handle_web_page_get(path):
+            return
+        if self._handle_wreck_index_get(path):
+            return
+        if self._handle_static_api_get(path):
+            return
+        if self._handle_dynamic_api_get(path):
+            return
+        if self._handle_passthrough_get(path):
             return
         super().do_GET()
 

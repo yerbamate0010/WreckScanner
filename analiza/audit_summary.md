@@ -19,6 +19,7 @@ Branch: `audit/diagnostics-and-quality`
   handler is no longer a D-level hotspot.
 - Split download request parsing, progress handling, WFS metrics, and response building
   out of `_handle_download`; the download path is no longer a D-level hotspot.
+- Split `Handler.do_GET` dispatch into small route helpers; the GET router is now B(6).
 - Created and used local `.venv-audit/`; no global packages, secrets, deploy config, data migrations, or service restarts.
 
 ## Reports
@@ -46,11 +47,10 @@ Branch: `audit/diagnostics-and-quality`
 - Ruff: 0 findings with the expanded rule set.
 - Bandit: 0 findings. The XML parser, SHA1, subprocess, and false-positive sentinel findings are resolved.
 - pip-audit: 0 known vulnerabilities after upgrading `.venv-audit` pip to 26.1.2.
-- Radon: average complexity B; `Handler.do_GET` improved from F(48) to D(23), and
+- Radon: average complexity B; `Handler.do_GET` improved from F(48) to B(6), and
   `Handler.do_POST` improved from F(108) to C(15). `Handler.do_DELETE` and
   `Handler.do_PATCH` are now A(5). `_handle_admin_photos` is no longer a D-level
-  hotspot. `_handle_download` is now B(6). The remaining server D-level item is the
-  `do_GET` router.
+  hotspot. `_handle_download` is now B(6). No D/F hotspots remain in `app/server.py`.
 - Vulture: no high-confidence dead code at `--min-confidence 80`.
 - Data diagnostics: OK, 0 errors/warnings/info. It reports 149 old field-photo records without `issue_type`; no data migration was performed.
 - Frontend: blocked in this environment because `node`, `npm`, and `npx` are not installed.
@@ -58,10 +58,11 @@ Branch: `audit/diagnostics-and-quality`
 ## Highest Priority Fixes
 
 1. Treat the focused `app/server.py` route cleanup as complete.
-   The first request-id/logging pass is complete, `Handler.do_GET` is now D(23), and
+   The first request-id/logging pass is complete, `Handler.do_GET` is now B(6), and
    `Handler.do_POST` is now C(15). `Handler.do_DELETE` and `Handler.do_PATCH` are now
    A(5). `_handle_admin_photos` and `_handle_download` have been split into smaller
-   helpers. Further server work should be optional and targeted, not another broad pass.
+   helpers. No D/F hotspots remain in `app/server.py`; further server work should be
+   optional and targeted, not another broad pass.
 
 2. Add tests around low-coverage critical paths.
    Coverage is weak in `app/map_downloads.py` (13%), `core/vision.py` (30%), `core/scoring.py` (35%), `core/detection.py` (0%), and `app/analyze.py` (0%). Prefer lightweight tests with fake models/images and no GPU dependency.
