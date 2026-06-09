@@ -105,6 +105,7 @@ _FIELD_PHOTO_PUBLIC_LAYER_KEYS = {
     "infrastructure": "field_photo_infrastructure",
     "smoke": "field_photo_smoke",
 }
+_ADMIN_PHOTO_SEARCH_FIELDS = ("id", "photo_id", "wreck_id", "original_filename", "issue_type")
 
 
 def _now_iso() -> str:
@@ -687,43 +688,69 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         path = config.WEB_DIR / file_name
         self._send_file(path, "text/html; charset=utf-8", include_body=include_body)
 
-    def _handle_admin_photos(self) -> None:
-        if not self._require_admin():
-            return
-        query = parse_qs(urlsplit(self.path).query)
+    def _admin_photo_review_items(self) -> list[dict]:
+        return list_field_photo_review_items(core_config.FIELD_PHOTOS_DIR) + list_wreck_photo_review_items(
+            core_config.WRECKS_DIR
+        )
+
+    def _admin_photo_exact_ids(self, query: dict[str, list[str]]) -> set[str]:
+        return {
+            item.strip().lower()
+            for raw in query.get("ids", [])
+            for item in str(raw).split(",")
+            if item.strip()
+        }
+
+    def _filter_admin_photos_by_status(self, photos: list[dict], status_filter: str) -> list[dict]:
+        if status_filter not in {"pending", "approved", "rejected"}:
+            return photos
+        return [photo for photo in photos if photo.get("public_review_status") == status_filter]
+
+    def _filter_admin_photos_by_scope(self, photos: list[dict], scope_filter: str) -> list[dict]:
+        if scope_filter not in {"field", "wreck"}:
+            return photos
+        return [photo for photo in photos if photo.get("scope") == scope_filter]
+
+    def _filter_admin_photos_by_issue(self, photos: list[dict], issue_filter: str) -> list[dict]:
+        if issue_filter == "all":
+            return photos
+        return [photo for photo in photos if photo.get("issue_type") == issue_filter]
+
+    def _filter_admin_photos_by_ids(self, photos: list[dict], exact_photo_ids: set[str]) -> list[dict]:
+        if not exact_photo_ids:
+            return photos
+        return [
+            photo
+            for photo in photos
+            if str(photo.get("photo_id") or "").lower() in exact_photo_ids
+            or str(photo.get("id") or "").lower() in exact_photo_ids
+        ]
+
+    def _admin_photo_search_text(self, photo: dict) -> str:
+        return " ".join(str(photo.get(key) or "") for key in _ADMIN_PHOTO_SEARCH_FIELDS).lower()
+
+    def _filter_admin_photos_by_search(self, photos: list[dict], search: str) -> list[dict]:
+        if not search:
+            return photos
+        return [photo for photo in photos if search in self._admin_photo_search_text(photo)]
+
+    def _filter_admin_photos(self, photos: list[dict], query: dict[str, list[str]]) -> list[dict]:
         status_filter = (query.get("status") or ["all"])[0]
         scope_filter = (query.get("scope") or ["all"])[0]
         issue_filter = (query.get("issue_type") or ["all"])[0]
         search = str((query.get("q") or [""])[0]).strip().lower()
-        exact_photo_ids = {
-            item.strip().lower() for raw in query.get("ids", []) for item in str(raw).split(",") if item.strip()
-        }
-        photos = list_field_photo_review_items(core_config.FIELD_PHOTOS_DIR) + list_wreck_photo_review_items(
-            core_config.WRECKS_DIR
-        )
-        if status_filter in {"pending", "approved", "rejected"}:
-            photos = [photo for photo in photos if photo.get("public_review_status") == status_filter]
-        if scope_filter in {"field", "wreck"}:
-            photos = [photo for photo in photos if photo.get("scope") == scope_filter]
-        if issue_filter != "all":
-            photos = [photo for photo in photos if photo.get("issue_type") == issue_filter]
-        if exact_photo_ids:
-            photos = [
-                photo
-                for photo in photos
-                if str(photo.get("photo_id") or "").lower() in exact_photo_ids
-                or str(photo.get("id") or "").lower() in exact_photo_ids
-            ]
-        if search:
-            photos = [
-                photo
-                for photo in photos
-                if search
-                in " ".join(
-                    str(photo.get(key) or "")
-                    for key in ("id", "photo_id", "wreck_id", "original_filename", "issue_type")
-                ).lower()
-            ]
+
+        photos = self._filter_admin_photos_by_status(photos, status_filter)
+        photos = self._filter_admin_photos_by_scope(photos, scope_filter)
+        photos = self._filter_admin_photos_by_issue(photos, issue_filter)
+        photos = self._filter_admin_photos_by_ids(photos, self._admin_photo_exact_ids(query))
+        return self._filter_admin_photos_by_search(photos, search)
+
+    def _handle_admin_photos(self) -> None:
+        if not self._require_admin():
+            return
+        query = parse_qs(urlsplit(self.path).query)
+        photos = self._filter_admin_photos(self._admin_photo_review_items(), query)
         self._send_json(200, {"status": "ok", "photos": photos})
 
     def _handle_admin_wrecks(self) -> None:

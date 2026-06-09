@@ -1146,6 +1146,50 @@ class FieldPhotoApiContractTests(unittest.TestCase):
         self.assertEqual([photo["id"] for photo in handler_json(guest)["photos"]], ["p1"])
         self.assertEqual([photo["id"] for photo in handler_json(admin)["photos"]], ["p1", "p2", "p3"])
 
+    def test_admin_photo_queue_filters_status_scope_issue_and_search(self):
+        field_photos = [
+            {
+                "id": "field-record-1",
+                "photo_id": "field-1",
+                "scope": "field",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            },
+            {
+                "id": "field-record-2",
+                "photo_id": "field-2",
+                "scope": "field",
+                "public_review_status": "approved",
+                "issue_type": "smoke",
+                "original_filename": "dym-zaakceptowany.jpg",
+            },
+        ]
+        wreck_photos = [
+            {
+                "id": "wreck-photo-1",
+                "photo_id": "wreck-1",
+                "scope": "wreck",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            }
+        ]
+        handler = make_handler(
+            "/api/admin/photos?status=pending&scope=field&issue_type=smoke&q=dym",
+            headers=admin_cookie(),
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_field_photo_review_items", return_value=field_photos),
+            patch.object(server, "list_wreck_photo_review_items", return_value=wreck_photos),
+        ):
+            server.Handler.do_GET(handler)
+
+        self.assertEqual(handler.status, 200)
+        self.assertEqual([photo["photo_id"] for photo in handler_json(handler)["photos"]], ["field-1"])
+
     def test_field_photo_list_assets_are_public_and_delete_requires_admin(self):
         with TemporaryDirectory() as tmp:
             field_photos_dir = Path(tmp) / "zdjecia_terenowe"
