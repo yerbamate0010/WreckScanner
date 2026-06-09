@@ -8,6 +8,7 @@ from typing import Any
 from PIL import Image
 
 from core import config
+from core.json_io import write_json_atomic
 from core.photo_privacy import is_approved, safe_child
 
 
@@ -28,10 +29,7 @@ def _read_json(path: Path) -> Any:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    write_json_atomic(path, payload)
 
 
 def _parse_reviewed_at(value: Any) -> datetime | None:

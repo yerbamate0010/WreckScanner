@@ -1,5 +1,6 @@
 # Pobieranie ortofotomap
 requests>=2.31
+defusedxml>=0.7.1
 Pillow>=10.0
 rasterio>=1.3
 

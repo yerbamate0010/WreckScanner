@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import re
 from pathlib import Path
@@ -36,6 +37,8 @@ from core.config import (
     UNLIMITED_SHARPNESS_SENTINEL,
 )
 from core.models import ImageItem
+
+logger = logging.getLogger(__name__)
 
 
 def parse_year(value: str) -> int | None:
@@ -122,7 +125,7 @@ def align_images(items: list[ImageItem], ref_idx: int) -> list[ImageItem]:
         except Exception as exc:
             item.img_aligned = src
             item.alignment = {"method": "none", "error": str(exc), "dx": 0.0, "dy": 0.0, "response": 0.0}
-            print(f"⚠️  {item.label}: błąd wyrównania ({exc}) — bez wyrównania")
+            logger.warning("%s: błąd wyrównania (%s) — bez wyrównania", item.label, exc)
             continue
 
         shift_len = math.hypot(dx, dy)
@@ -141,12 +144,16 @@ def align_images(items: list[ImageItem], ref_idx: int) -> list[ImageItem]:
                 )
                 method = "phase_translation"
             item.alignment = {"method": method, "dx": dx, "dy": dy, "response": response}
-            print(f"🔧 {item.label}: align translacją dx={dx:.1f}px dy={dy:.1f}px (phase={response:.3f})")
+            logger.info("%s: align translacją dx=%.1fpx dy=%.1fpx (phase=%.3f)", item.label, dx, dy, response)
         else:
             item.img_aligned = src
             item.alignment = {"method": "none", "dx": dx, "dy": dy, "response": response}
-            print(
-                f"⚠️  {item.label}: align niewiarygodny dx={dx:.1f}px dy={dy:.1f}px phase={response:.3f} — bez wyrównania"
+            logger.warning(
+                "%s: align niewiarygodny dx=%.1fpx dy=%.1fpx phase=%.3f — bez wyrównania",
+                item.label,
+                dx,
+                dy,
+                response,
             )
 
     return items

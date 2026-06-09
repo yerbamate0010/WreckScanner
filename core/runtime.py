@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from contextlib import suppress
 
 TEXT_ENCODING = "utf-8"
 TEXT_ERRORS = "replace"
@@ -13,10 +14,8 @@ def configure_process_encoding() -> None:
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is None:
             continue
-        try:
+        with suppress(TypeError, ValueError):
             reconfigure(encoding=TEXT_ENCODING, errors=TEXT_ERRORS)
-        except (TypeError, ValueError):
-            pass
     os.environ["PYTHONIOENCODING"] = PYTHON_IO_ENCODING
 
 

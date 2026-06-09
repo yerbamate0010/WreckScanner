@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import cv2
 import numpy as np
 
 from core.config import DEFAULT_ENHANCEMENT_SETTINGS, EnhancementSettings
 from core.models import ImageItem
+
+logger = logging.getLogger(__name__)
 
 
 def enhance_orthophoto(
@@ -53,16 +57,16 @@ def enhance_image_items(
 ) -> None:
     """Zastosuj ten sam filtr do obrazów po wyrównaniu, przed analizą YOLO."""
     if not settings.enabled:
-        print("Enhancement koloru: wyłączony")
+        logger.info("Enhancement koloru: wyłączony")
         return
 
-    print(enhancement_summary(settings))
+    logger.info(enhancement_summary(settings))
     for item in items:
         img = item.img if item.img_aligned is None else item.img_aligned
         before_l = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)[..., 0].mean()
         item.img_aligned = enhance_orthophoto(img, settings=settings)
         after_l = cv2.cvtColor(item.img_aligned, cv2.COLOR_BGR2LAB)[..., 0].mean()
-        print(f" - {item.label}: L {before_l:.0f} -> {after_l:.0f}")
+        logger.info(" - %s: L %.0f -> %.0f", item.label, before_l, after_l)
 
 
 def enhancement_summary(settings: EnhancementSettings = DEFAULT_ENHANCEMENT_SETTINGS) -> str:

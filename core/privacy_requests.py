@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from core import config
+from core.json_io import write_json_atomic
 
 PRIVACY_REQUEST_STATUSES = {"new", "in_progress", "done", "rejected"}
 
@@ -24,14 +25,16 @@ def _safe_text(value: Any, max_len: int) -> str:
 
 
 def _request_id(created_at: str, email: str) -> str:
-    digest = hashlib.sha1(f"{created_at}:{email}:{secrets.token_urlsafe(12)}".encode("utf-8")).hexdigest()[:10]
+    digest = hashlib.sha1(
+        f"{created_at}:{email}:{secrets.token_urlsafe(12)}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:10]
     stamp = created_at.replace("-", "").replace(":", "").removesuffix("Z")
     return f"privacy_{stamp}_{digest}"
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json_atomic(path, payload)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

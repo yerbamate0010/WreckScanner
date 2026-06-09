@@ -16,8 +16,9 @@ from urllib.parse import quote
 from PIL import Image, UnidentifiedImageError
 
 from core import config
-from core.map_crops import save_scan_crops
 from core.geo import external_map_links, meters_between
+from core.json_io import write_json_atomic
+from core.map_crops import save_scan_crops
 from core.photo_privacy import (
     REVIEW_STATUSES,
     ensure_review_fields,
@@ -45,10 +46,7 @@ def _read_json(path: Path) -> Any:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    write_json_atomic(path, payload)
 
 
 def _private_original_rel(wreck_id: str, photo_id: str, ext: str) -> str:
@@ -111,12 +109,13 @@ def _evidence_id(candidate: dict[str, Any], metadata: dict[str, Any]) -> str:
         "years": metadata.get("years"),
     }
     raw = json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
-    return hashlib.sha1(raw).hexdigest()[:14]
+    return hashlib.sha1(raw, usedforsecurity=False).hexdigest()[:14]
 
 
 def _manual_evidence_id(lat: float, lon: float, created_at: str) -> str:
     payload = f"{lat:.8f}:{lon:.8f}:{created_at}:{secrets.token_urlsafe(8)}"
-    return f"manual_{hashlib.sha1(payload.encode('utf-8')).hexdigest()[:14]}"
+    digest = hashlib.sha1(payload.encode("utf-8"), usedforsecurity=False).hexdigest()[:14]
+    return f"manual_{digest}"
 
 
 def _links(lat: float, lon: float) -> dict[str, str]:
@@ -572,7 +571,8 @@ def delete_wreck_photo(wreck_id: str, photo_id: str, wrecks_dir: Path) -> dict[s
     if photo_dir.exists():
         shutil.rmtree(photo_dir)
     record["attached_photos"] = [
-        item for item in (record.get("attached_photos") or [])
+        item
+        for item in (record.get("attached_photos") or [])
         if not (isinstance(item, dict) and str(item.get("id") or "") == photo_id)
     ]
     record["updated_at"] = _now_iso()
@@ -641,7 +641,10 @@ def delete_wreck(wreck_id: str, wrecks_dir: Path) -> dict[str, Any]:
 
 def _wreck_photo_id(upload: UploadedFile) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    digest = hashlib.sha1(f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode()).hexdigest()[:8]
+    digest = hashlib.sha1(
+        f"{upload.filename}:{len(upload.data)}:{secrets.token_urlsafe(12)}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:8]
     return f"photo_{stamp}_{digest}"
 
 
@@ -904,7 +907,7 @@ def _render_record_html(record: dict[str, Any], record_dir: Path) -> None:
             f"""
             <section class="evidence">
               <h2>Dowód {html.escape(evidence["id"])} · {html.escape(evidence["created_at"])}</h2>
-              <p>{' · '.join(evidence_meta)}</p>
+              <p>{" · ".join(evidence_meta)}</p>
               <div class="grid">{"".join(crop_cards)}</div>
               {metadata_links_html}
             </section>

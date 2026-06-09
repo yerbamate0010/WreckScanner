@@ -5,6 +5,7 @@ import json
 import math
 import os
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -115,10 +116,8 @@ def clear_generated_files(*dirs: Path) -> None:
             continue
         for name in os.listdir(directory):
             if name.lower().endswith((".jpg", ".jpeg", ".png")):
-                try:
+                with suppress(OSError):
                     (directory / name).unlink()
-                except OSError:
-                    pass
 
 
 def _versioned_asset_url(path: str, asset_version: str) -> str:
@@ -175,9 +174,7 @@ def weak_detection_crop(obs: Observation | None) -> bool:
         return False
     if obs.dist_m is not None and obs.dist_m > DETECTION_CROP_MAX_DIST_M:
         return True
-    if obs.match_score is not None and obs.match_score < DETECTION_CROP_MIN_MATCH_SCORE:
-        return True
-    return False
+    return obs.match_score is not None and obs.match_score < DETECTION_CROP_MIN_MATCH_SCORE
 
 
 def save_candidate_crops(

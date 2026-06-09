@@ -7,13 +7,12 @@ prywatne_zgloszenia/
 zgloszenia_prywatnosci/
 *.tif
 *.tiff
-analiza/candidates.json
-analiza/crop_manifest.json
-analiza/data_diagnostics.json
-analiza/run_log.json
-analiza/report.html
+analiza/
 *.pyc
 __pycache__/
+.coverage
+.venv-audit/
+node_modules/
 .DS_Store
 settings.json
 .admin_password

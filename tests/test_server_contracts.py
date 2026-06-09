@@ -15,6 +15,7 @@ from app import config as app_config
 from app import map_downloads, pipeline, wms_cache
 from core import config as core_config
 from core.report_packages import report_package_asset
+from core.uploads import UploadedFile
 
 
 def make_handler(path, payload=None, headers=None, method="GET"):
@@ -49,6 +50,18 @@ def handler_json(handler):
     return json.loads(handler.wfile.getvalue().decode("utf-8"))
 
 
+def handler_text(handler):
+    return handler.wfile.getvalue().decode("utf-8")
+
+
+def response_header(handler, name: str) -> str | None:
+    target = name.lower()
+    for key, value in handler.response_headers:
+        if key.lower() == target:
+            return value
+    return None
+
+
 def image_bytes() -> bytes:
     out = io.BytesIO()
     Image.new("RGB", (24, 24), (40, 90, 130)).save(out, "JPEG")
@@ -76,6 +89,113 @@ def patch_default_app_settings(testcase: unittest.TestCase) -> None:
     testcase.addCleanup(patcher.stop)
 
 
+class JsonResponseRequestIdContractTests(unittest.TestCase):
+    def test_error_json_includes_request_id_and_response_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req-123"})
+
+        handler._send_json(400, {"error": "bad payload"})
+
+        payload = handler_json(handler)
+        self.assertEqual(payload["error"], "bad payload")
+        self.assertEqual(payload["request_id"], "req-123")
+        self.assertIn(("X-Request-ID", "req-123"), handler.response_headers)
+
+    def test_success_json_keeps_payload_shape_and_sanitizes_request_id_header(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "req 123\nx"})
+
+        handler._send_json(200, {"status": "ok"})
+
+        self.assertEqual(handler_json(handler), {"status": "ok"})
+        self.assertIn(("X-Request-ID", "req123x"), handler.response_headers)
+
+    def test_internal_error_response_hides_exception_details_and_keeps_request_id(self):
+        handler = make_handler("/api/surface/features", headers={"X-Request-ID": "req-private"})
+
+        with self.assertLogs("wreckscanner.server", level="ERROR") as logs:
+            handler._send_internal_error(
+                502,
+                "Synthetic upstream failure",
+                RuntimeError("private token=secret"),
+                public_error="Nie udało się pobrać danych.",
+            )
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 502)
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["error"], "Nie udało się pobrać danych.")
+        self.assertEqual(payload["request_id"], "req-private")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("private token=secret", "\n".join(logs.output))
+
+
+class ApiNotFoundContractTests(unittest.TestCase):
+    def _assert_api_not_found(self, handler, expected_request_id: str) -> None:
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 404)
+        self.assertEqual(payload["error"], "Nie znaleziono endpointu.")
+        self.assertEqual(payload["request_id"], expected_request_id)
+        self.assertEqual(response_header(handler, "X-Request-ID"), expected_request_id)
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+
+    def test_unknown_get_api_endpoint_returns_json_not_found(self):
+        handler = make_handler("/api/does-not-exist", headers={"X-Request-ID": "missing-get-req"})
+
+        server.Handler.do_GET(handler)
+
+        self._assert_api_not_found(handler, "missing-get-req")
+
+    def test_unknown_head_api_endpoint_returns_headers_without_body(self):
+        handler = make_handler(
+            "/api/does-not-exist",
+            headers={"X-Request-ID": "missing-head-req"},
+            method="HEAD",
+        )
+
+        server.Handler.do_HEAD(handler)
+
+        self.assertEqual(handler.status, 404)
+        self.assertEqual(handler.wfile.getvalue(), b"")
+        self.assertEqual(response_header(handler, "X-Request-ID"), "missing-head-req")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertEqual(response_header(handler, "Content-Type"), "application/json")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+
+    def test_unknown_post_api_endpoint_returns_json_not_found(self):
+        handler = make_handler(
+            "/api/does-not-exist",
+            {"unused": True},
+            headers={"X-Request-ID": "missing-post-req"},
+        )
+
+        server.Handler.do_POST(handler)
+
+        self._assert_api_not_found(handler, "missing-post-req")
+
+    def test_unknown_patch_api_endpoint_returns_json_not_found(self):
+        handler = make_handler(
+            "/api/does-not-exist",
+            {"unused": True},
+            headers={"X-Request-ID": "missing-patch-req"},
+            method="PATCH",
+        )
+
+        server.Handler.do_PATCH(handler)
+
+        self._assert_api_not_found(handler, "missing-patch-req")
+
+    def test_unknown_delete_api_endpoint_returns_json_not_found(self):
+        handler = make_handler(
+            "/api/does-not-exist",
+            headers={"X-Request-ID": "missing-delete-req"},
+            method="DELETE",
+        )
+
+        server.Handler.do_DELETE(handler)
+
+        self._assert_api_not_found(handler, "missing-delete-req")
+
+
 class FakeCadastralResponse:
     text = """
     <table>
@@ -96,6 +216,11 @@ class FakeCadastralSession:
     def get(self, url, params=None, timeout=None):
         self.calls.append({"url": url, "params": params, "timeout": timeout})
         return FakeCadastralResponse()
+
+
+class FailingCadastralSession:
+    def get(self, url, params=None, timeout=None):
+        raise RuntimeError("upstream token=secret failed")
 
 
 def create_wreck_fixture(root: Path) -> Path:
@@ -163,6 +288,19 @@ def make_multipart_handler(path, fields=None, files=None, headers=None):
 
 
 class SettingsApiContractTests(unittest.TestCase):
+    def test_get_settings_success_json_has_request_headers_without_payload_change(self):
+        handler = make_handler("/api/settings", headers={"X-Request-ID": "settings-get-req"})
+
+        server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertIn("defaults", payload)
+        self.assertNotIn("request_id", payload)
+        self.assertEqual(response_header(handler, "X-Request-ID"), "settings-get-req")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+
     def test_post_settings_accepts_no_limit_cache(self):
         with TemporaryDirectory() as tmp:
             settings_path = Path(tmp) / "settings.json"
@@ -240,6 +378,27 @@ class SettingsApiContractTests(unittest.TestCase):
                     "photo_uploads": False,
                 },
             )
+
+    def test_post_settings_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/settings",
+            {"public_layers": {"saved_wrecks": False}},
+            headers={**admin_cookie(), "X-Request-ID": "settings-save-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "save_app_settings", side_effect=OSError("settings token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zapisać ustawień aplikacji.")
+        self.assertEqual(payload["request_id"], "settings-save-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("settings token=secret", "\n".join(logs.output))
 
     def test_post_settings_rejects_non_object_payload(self):
         handler = make_handler("/api/settings", headers=admin_cookie())
@@ -338,8 +497,138 @@ class CadastralApiContractTests(unittest.TestCase):
         self.assertEqual(handler.status, 400)
         self.assertEqual(handler_json(handler)["status"], "error")
 
+    def test_cadastral_identify_hides_upstream_exception_details(self):
+        handler = make_handler(
+            "/api/cadastral/identify?lat=51.089742&lon=17.038940",
+            headers={"X-Request-ID": "parcel-req"},
+        )
+
+        with (
+            patch.object(map_downloads, "get_http_session", return_value=FailingCadastralSession()),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 502)
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["error"], "Nie udało się pobrać danych działki.")
+        self.assertEqual(payload["request_id"], "parcel-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("upstream token=secret failed", "\n".join(logs.output))
+
+
+class SurfaceApiContractTests(unittest.TestCase):
+    def test_surface_features_hides_internal_exception_details_and_returns_empty_geojson(self):
+        handler = make_handler(
+            "/api/surface/features?bbox=51.0,17.0,51.1,17.1",
+            headers={"X-Request-ID": "surface-req"},
+        )
+
+        with (
+            patch.object(server, "surface_features_geojson", side_effect=RuntimeError("overpass token=secret failed")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 502)
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["error"], "Nie udało się pobrać danych nawierzchni.")
+        self.assertEqual(payload["request_id"], "surface-req")
+        self.assertEqual(payload["geojson"], {"type": "FeatureCollection", "features": []})
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("overpass token=secret failed", "\n".join(logs.output))
+
+
+class StatusApiContractTests(unittest.TestCase):
+    def test_public_admin_status_does_not_expose_pending_submission_usage(self):
+        handler = make_handler(
+            "/api/admin/status",
+            headers={"X-Request-ID": "public-admin-status-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "pending_submission_usage", side_effect=AssertionError("should not scan storage")),
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(payload["status"], "ok")
+        self.assertTrue(payload["admin_enabled"])
+        self.assertFalse(payload["authenticated"])
+        self.assertNotIn("pending_submissions", payload)
+        self.assertEqual(response_header(handler, "X-Request-ID"), "public-admin-status-req")
+
+    def test_authenticated_admin_status_includes_pending_submission_usage(self):
+        handler = make_handler(
+            "/api/admin/status",
+            headers={**admin_cookie(), "X-Request-ID": "private-admin-status-req"},
+        )
+        usage = {"bytes": 123, "items": 2, "max_bytes": 1000, "max_items": 10}
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "pending_submission_usage", return_value=usage) as usage_mock,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertTrue(payload["authenticated"])
+        self.assertEqual(payload["pending_submissions"], usage)
+        usage_mock.assert_called_once()
+
+    def test_admin_status_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/status",
+            headers={**admin_cookie(), "X-Request-ID": "admin-status-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "pending_submission_usage", side_effect=OSError("admin status token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać statusu panelu administratora.")
+        self.assertEqual(payload["request_id"], "admin-status-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("admin status token=secret", "\n".join(logs.output))
+
+    def test_health_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/health",
+            headers={"X-Request-ID": "health-status-req"},
+        )
+
+        with (
+            patch.object(pipeline, "system_pressure", side_effect=RuntimeError("health token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać statusu serwera.")
+        self.assertEqual(payload["request_id"], "health-status-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("health token=secret", "\n".join(logs.output))
+
 
 class SecurityHeadersContractTests(unittest.TestCase):
+    def test_default_security_headers_are_conservative_and_global(self):
+        headers = server._security_response_headers()
+
+        self.assertEqual(headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(headers["Referrer-Policy"], "same-origin")
+        self.assertEqual(headers["X-Frame-Options"], "SAMEORIGIN")
+
     def test_admin_cookie_is_secure_on_public_hosts_but_not_localhost(self):
         public_handler = make_handler(
             "/api/admin/login",
@@ -369,7 +658,119 @@ class SecurityHeadersContractTests(unittest.TestCase):
 
         self.assertEqual(allowed["Access-Control-Allow-Origin"], "https://wreckscanner.pl")
         self.assertNotEqual(allowed["Access-Control-Allow-Origin"], "*")
+        self.assertIn("HEAD", allowed["Access-Control-Allow-Methods"])
+        self.assertIn("X-Request-ID", allowed["Access-Control-Allow-Headers"])
+        self.assertEqual(allowed["Access-Control-Expose-Headers"], "X-Request-ID")
         self.assertEqual(allowed["Vary"], "Origin")
+
+    def test_options_response_has_request_id_and_empty_body(self):
+        handler = make_handler(
+            "/api/field-photos",
+            headers={"Origin": "https://wreckscanner.pl", "X-Request-ID": "options-req"},
+            method="OPTIONS",
+        )
+
+        server.Handler.do_OPTIONS(handler)
+
+        self.assertEqual(handler.status, 204)
+        self.assertEqual(handler.wfile.getvalue(), b"")
+        self.assertEqual(response_header(handler, "X-Request-ID"), "options-req")
+        self.assertEqual(response_header(handler, "Content-Length"), "0")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+
+
+class ListApiFailureContractTests(unittest.TestCase):
+    def test_admin_photo_queue_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/photos",
+            headers={**admin_cookie(), "X-Request-ID": "admin-photos-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_field_photo_review_items", side_effect=OSError("photo queue token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać kolejki zdjęć.")
+        self.assertEqual(payload["request_id"], "admin-photos-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("photo queue token=secret", "\n".join(logs.output))
+
+    def test_admin_wreck_queue_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/wrecks",
+            headers={**admin_cookie(), "X-Request-ID": "admin-wrecks-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_wreck_review_items", side_effect=OSError("wreck queue token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać kolejki spraw pojazdów.")
+        self.assertEqual(payload["request_id"], "admin-wrecks-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("wreck queue token=secret", "\n".join(logs.output))
+
+    def test_admin_privacy_queue_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/privacy-requests",
+            headers={**admin_cookie(), "X-Request-ID": "admin-privacy-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_privacy_requests", side_effect=OSError("privacy queue token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać zgłoszeń prywatności.")
+        self.assertEqual(payload["request_id"], "admin-privacy-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("privacy queue token=secret", "\n".join(logs.output))
+
+    def test_wreck_list_unexpected_error_hides_details(self):
+        handler = make_handler("/api/wrecks", headers={"X-Request-ID": "wreck-list-error-req"})
+
+        with (
+            patch.object(server, "list_wrecks", side_effect=OSError("wreck list token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać spraw pojazdów.")
+        self.assertEqual(payload["request_id"], "wreck-list-error-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("wreck list token=secret", "\n".join(logs.output))
+
+    def test_field_photo_list_unexpected_error_hides_details(self):
+        handler = make_handler("/api/field-photos", headers={"X-Request-ID": "field-list-error-req"})
+
+        with (
+            patch.object(server, "list_field_photos", side_effect=OSError("field list token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać zdjęć terenowych.")
+        self.assertEqual(payload["request_id"], "field-list-error-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("field list token=secret", "\n".join(logs.output))
 
 
 class DownloadApiContractTests(unittest.TestCase):
@@ -386,10 +787,24 @@ class DownloadApiContractTests(unittest.TestCase):
             "/analiza/report.html?lang=pl&v=123",
         )
 
+    def test_download_progress_success_json_has_request_headers_without_payload_change(self):
+        handler = make_handler("/api/download/progress", headers={"X-Request-ID": "progress-req"})
+
+        server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertIn("status", payload)
+        self.assertNotIn("request_id", payload)
+        self.assertEqual(response_header(handler, "X-Request-ID"), "progress-req")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+
     def test_download_response_counts_all_non_cache_wfs_sources_as_downloaded(self):
         handler = make_handler(
             "/api/download",
             {"lat": 51.1, "lon": 17.1, "width": 50, "height": 50},
+            headers={"X-Request-ID": "download-success-req"},
         )
         results = {
             2020: {"status": "ok"},
@@ -406,10 +821,11 @@ class DownloadApiContractTests(unittest.TestCase):
         with (
             patch.object(map_downloads, "download_maps", return_value=(results, "bbox", wfs_summary)),
             patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
-            patch("builtins.print"),
+            patch("builtins.print") as print_mock,
         ):
             server.Handler.do_POST(handler)
 
+        print_mock.assert_not_called()
         payload = handler_json(handler)
         self.assertEqual(handler.status, 200)
         self.assertEqual(payload["status"], "completed")
@@ -420,6 +836,42 @@ class DownloadApiContractTests(unittest.TestCase):
         self.assertEqual(payload["wfs_downloaded"], 3)
         self.assertEqual(payload["wfs_skipped"], 1)
         self.assertTrue(payload["job_token"])
+        self.assertNotIn("request_id", payload)
+        self.assertEqual(response_header(handler, "X-Request-ID"), "download-success-req")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+        pipeline.finish_pipeline(payload["job_token"])
+
+    def test_download_progress_callback_updates_percent_and_completion(self):
+        handler = make_handler(
+            "/api/download",
+            {"lat": 51.1, "lon": 17.1, "width": 40, "height": 50},
+        )
+        progress_events = []
+
+        def fake_download_maps(lat, lon, width, height, progress):
+            progress(stage="download", message="Pobieranie", current=2, total=4)
+            progress(stage="download", message="Bez postępu", current=1, total=0)
+            return ({2020: {"status": "ok"}}, "bbox", [])
+
+        with (
+            patch.object(map_downloads, "download_maps", side_effect=fake_download_maps),
+            patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
+            patch.object(
+                server, "_set_download_progress", side_effect=lambda **payload: progress_events.append(payload)
+            ),
+            patch("builtins.print") as print_mock,
+        ):
+            server.Handler.do_POST(handler)
+
+        print_mock.assert_not_called()
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(payload["status"], "completed")
+        self.assertEqual(progress_events[0]["percent"], 0)
+        self.assertEqual(progress_events[1]["percent"], 50.0)
+        self.assertIsNone(progress_events[2]["percent"])
+        self.assertEqual(progress_events[-1]["status"], "done")
         pipeline.finish_pipeline(payload["job_token"])
 
     def test_download_rejects_concurrent_pipeline(self):
@@ -448,6 +900,114 @@ class DownloadApiContractTests(unittest.TestCase):
         self.assertEqual(handler.status, 400)
         self.assertIn("maksymalnie", handler_json(handler)["error"])
 
+    def test_download_unexpected_error_hides_details_and_releases_slot(self):
+        handler = make_handler(
+            "/api/download",
+            {"lat": 51.1, "lon": 17.1, "width": 50, "height": 50},
+            headers={"X-Request-ID": "download-error-req"},
+        )
+
+        with (
+            patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
+            patch.object(map_downloads, "download_maps", side_effect=RuntimeError("download token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        progress = server._get_download_progress()
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać ortofotomap.")
+        self.assertEqual(payload["request_id"], "download-error-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertEqual(progress["status"], "error")
+        self.assertEqual(progress["message"], "Nie udało się pobrać ortofotomap.")
+        self.assertEqual(pipeline.pipeline_snapshot()["status"], "idle")
+        self.assertIn("download token=secret", "\n".join(logs.output))
+
+    def test_inspect_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/inspect",
+            {"lat": 51.1, "lon": 17.1, "cropM": 12},
+            headers={"X-Request-ID": "inspect-error-req"},
+        )
+
+        with (
+            patch.object(server, "save_scan_crops", side_effect=OSError("inspect token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się przygotować wycinków mapy.")
+        self.assertEqual(payload["request_id"], "inspect-error-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("inspect token=secret", "\n".join(logs.output))
+
+    def test_analyze_unexpected_pre_token_error_keeps_active_pipeline_private(self):
+        token = pipeline.start_pipeline("other-client")
+        self.addCleanup(pipeline.finish_pipeline, token)
+        handler = make_handler(
+            "/api/analyze",
+            {"job_token": token},
+            headers={"X-Request-ID": "analyze-pressure-req"},
+        )
+
+        with (
+            patch.object(pipeline, "system_pressure", side_effect=RuntimeError("pressure token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zakończyć analizy.")
+        self.assertEqual(payload["request_id"], "analyze-pressure-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertEqual(pipeline.pipeline_snapshot()["status"], "active")
+        self.assertIn("pressure token=secret", "\n".join(logs.output))
+
+    def test_analyze_success_json_has_request_headers_without_payload_change(self):
+        token = pipeline.start_pipeline("127.0.0.1")
+        self.addCleanup(pipeline.finish_pipeline, token)
+        handler = make_handler(
+            "/api/analyze",
+            {"job_token": token, "device": "cpu"},
+            headers={"X-Request-ID": "analyze-success-req"},
+        )
+
+        with TemporaryDirectory() as tmp:
+            analysis_dir = Path(tmp) / "analiza"
+            analysis_dir.mkdir()
+            write_json(analysis_dir / "candidates.json", [{"rank": 1}, {"rank": 2}])
+            (analysis_dir / "report.html").write_text("<html>raport</html>", encoding="utf-8")
+            completed = server.subprocess.CompletedProcess(
+                ["python", "analyze.py"],
+                0,
+                stdout="analysis ok",
+                stderr="",
+            )
+            with (
+                patch.object(app_config, "ANALYSIS_DIR", analysis_dir),
+                patch.object(pipeline, "system_pressure", return_value={"overloaded": False}),
+                patch.object(server.subprocess, "run", return_value=completed),
+                patch("builtins.print") as print_mock,
+            ):
+                server.Handler.do_POST(handler)
+
+        print_mock.assert_not_called()
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["stdout"], "analysis ok")
+        self.assertEqual([candidate["rank"] for candidate in payload["candidates"]], [1, 2])
+        self.assertNotIn("request_id", payload)
+        self.assertEqual(response_header(handler, "X-Request-ID"), "analyze-success-req")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+        self.assertEqual(pipeline.pipeline_snapshot()["status"], "idle")
+
     def test_download_progress_percent_is_clamped_and_indeterminate_for_zero_total(self):
         self.assertEqual(pipeline.progress_percent(50, 100), 50.0)
         self.assertEqual(pipeline.progress_percent(200, 100), 100.0)
@@ -463,6 +1023,47 @@ class DownloadApiContractTests(unittest.TestCase):
             stripped,
             "OGC_ortofoto_2025/MapServer/WMSServer?SERVICE=WMS&LAYERS=1&FORMAT=image%2Fpng",
         )
+
+    def test_wms_proxy_invalid_path_returns_controlled_text_error(self):
+        handler = make_handler(
+            "/wms_proxy/../secret",
+            headers={"X-Request-ID": "wms-invalid-req"},
+        )
+
+        server.Handler.do_GET(handler)
+
+        self.assertEqual(handler.status, 400)
+        self.assertEqual(handler_text(handler), "Invalid wms_proxy path\n")
+        self.assertEqual(response_header(handler, "Content-Type"), "text/plain; charset=utf-8")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertEqual(response_header(handler, "X-Request-ID"), "wms-invalid-req")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+
+    def test_wms_proxy_upstream_error_hides_details_and_keeps_request_id(self):
+        handler = make_handler(
+            "/wms_proxy/OGC_ortofoto_2025/MapServer/WMSServer?SERVICE=WMS&LAYERS=1",
+            headers={"X-Request-ID": "wms-upstream-req"},
+        )
+
+        class FailingWmsSession:
+            def get(self, url, timeout=None):
+                raise RuntimeError("wms upstream token=secret")
+
+        with (
+            patch.object(wms_cache, "read_tile_cache", return_value=None),
+            patch.object(map_downloads, "get_http_session", return_value=FailingWmsSession()),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        self.assertEqual(handler.status, 502)
+        self.assertEqual(handler_text(handler), "WMS upstream error\n")
+        self.assertEqual(response_header(handler, "Content-Type"), "text/plain; charset=utf-8")
+        self.assertEqual(response_header(handler, "Cache-Control"), "no-store")
+        self.assertEqual(response_header(handler, "X-Request-ID"), "wms-upstream-req")
+        self.assertIsNotNone(response_header(handler, "Content-Length"))
+        self.assertNotIn("secret", handler_text(handler))
+        self.assertIn("wms upstream token=secret", "\n".join(logs.output))
 
     def test_wms_tile_cache_key_ignores_frontend_revision_param(self):
         first = wms_cache.strip_proxy_only_params(
@@ -576,8 +1177,63 @@ class PrivacyRequestApiContractTests(unittest.TestCase):
             self.assertEqual(filtered_queue.status, 200)
             self.assertEqual(handler_json(filtered_queue)["requests"][0]["id"], request_id)
 
+    def test_privacy_request_update_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/privacy-requests/privacy_20260611_deadbeef",
+            {"status": "in_progress"},
+            headers={**admin_cookie(), "X-Request-ID": "privacy-update-req"},
+            method="PATCH",
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "update_privacy_request", side_effect=OSError("privacy token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_PATCH(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zaktualizować zgłoszenia prywatności.")
+        self.assertEqual(payload["request_id"], "privacy-update-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("privacy token=secret", "\n".join(logs.output))
+
+    def test_privacy_request_create_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/privacy-requests",
+            {"email": "jan@example.com", "target": "wreck_1", "reason": "Proszę o usunięcie danych."},
+            headers={"X-Request-ID": "privacy-create-req"},
+        )
+
+        with (
+            patch.object(server, "create_privacy_request", side_effect=OSError("privacy create token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zapisać zgłoszenia prywatności.")
+        self.assertEqual(payload["request_id"], "privacy-create-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("privacy create token=secret", "\n".join(logs.output))
+
 
 class PhotoRetentionApiContractTests(unittest.TestCase):
+    def _reset_retention_state(self) -> None:
+        with server._photo_retention_state_lock:
+            server._photo_retention_state.update(
+                {
+                    "running": False,
+                    "last_started_at": None,
+                    "last_finished_at": None,
+                    "last_source": None,
+                    "last_error": None,
+                    "last_report": None,
+                }
+            )
+
     def test_admin_can_view_and_run_photo_retention(self):
         fake_report = {
             "status": "ok",
@@ -612,6 +1268,29 @@ class PhotoRetentionApiContractTests(unittest.TestCase):
         self.assertEqual(payload["report"], fake_report)
         self.assertFalse(payload["retention"]["running"])
         self.assertEqual(payload["retention"]["last_source"], "admin")
+
+    def test_photo_retention_unexpected_error_hides_details_from_response_snapshot(self):
+        self.addCleanup(self._reset_retention_state)
+        handler = make_handler(
+            "/api/admin/photo-retention/run",
+            {"dry_run": True},
+            headers={**admin_cookie(), "X-Request-ID": "retention-req"},
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "retire_private_originals", side_effect=OSError("retention token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się uruchomić retencji zdjęć.")
+        self.assertEqual(payload["request_id"], "retention-req")
+        self.assertEqual(payload["retention"]["last_error"], "Nie udało się uruchomić retencji zdjęć.")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("retention token=secret", "\n".join(logs.output))
 
 
 class ReportPackageApiContractTests(unittest.TestCase):
@@ -680,6 +1359,53 @@ class ReportPackageApiContractTests(unittest.TestCase):
             self.assertEqual(bad_zip.status, 404)
             self.assertIn(("Content-Type", "application/zip"), public_zip.response_headers)
 
+    def test_public_report_package_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/wrecks/wreck_51100000_17200000/public-report-package",
+            headers={"X-Request-ID": "report-req"},
+        )
+
+        with (
+            patch.object(server.Handler, "_read_multipart_form", return_value=({"sender": "Jan"}, [])),
+            patch.object(
+                server,
+                "create_public_report_package",
+                side_effect=RuntimeError("report package token=secret"),
+            ),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się przygotować publicznego pakietu raportu.")
+        self.assertEqual(payload["request_id"], "report-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("report package token=secret", "\n".join(logs.output))
+
+    def test_public_report_package_asset_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/public-report-packages/wreck_51100000_17200000/report_20260611T120000Z_deadbeef/zip?token=abc",
+            headers={"X-Request-ID": "report-asset-req"},
+        )
+
+        with (
+            patch.object(
+                server,
+                "public_report_package_asset",
+                side_effect=OSError("public package asset token=secret"),
+            ),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać publicznego pliku pakietu raportu.")
+        self.assertEqual(payload["request_id"], "report-asset-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("public package asset token=secret", "\n".join(logs.output))
+
     def test_public_feature_settings_block_public_report_package_photo_uploads(self):
         with TemporaryDirectory() as tmp:
             wrecks_dir = create_wreck_fixture(Path(tmp))
@@ -700,7 +1426,9 @@ class ReportPackageApiContractTests(unittest.TestCase):
 
             with (
                 patch.object(core_config, "WRECKS_DIR", wrecks_dir),
-                patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")),
+                patch.object(
+                    server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")
+                ),
             ):
                 server.Handler.do_POST(handler)
 
@@ -750,18 +1478,43 @@ class ReportPackageApiContractTests(unittest.TestCase):
             submission_owner=ANY,
         )
 
+    def test_save_wreck_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/wrecks",
+            {"lat": 51.088784, "lon": 17.035782},
+            headers={"X-Request-ID": "save-wreck-req"},
+        )
+
+        with (
+            patch.object(server, "assert_pending_submission_quota"),
+            patch.object(server, "save_manual_wreck", side_effect=OSError("save wreck token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zapisać sprawy pojazdu.")
+        self.assertEqual(payload["request_id"], "save-wreck-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("save wreck token=secret", "\n".join(logs.output))
+
     def test_public_feature_settings_block_public_scan_and_manual_wrecks(self):
         download = make_handler("/api/download", {"lat": 51.1, "lon": 17.2, "width": 50, "height": 50})
         analyze = make_handler("/api/analyze", {"job_token": "abc"})
         yolo_wreck = make_handler("/api/wrecks", {"rank": 3})
         manual = make_handler("/api/wrecks", {"lat": 51.088784, "lon": 17.035782})
 
-        with patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("scan_analysis")):
+        with patch.object(
+            server, "load_app_settings", return_value=app_settings_with_disabled_feature("scan_analysis")
+        ):
             server.Handler.do_POST(download)
             server.Handler.do_POST(analyze)
         with patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("yolo_wrecks")):
             server.Handler.do_POST(yolo_wreck)
-        with patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("manual_wrecks")):
+        with patch.object(
+            server, "load_app_settings", return_value=app_settings_with_disabled_feature("manual_wrecks")
+        ):
             server.Handler.do_POST(manual)
 
         self.assertEqual(download.status, 403)
@@ -786,6 +1539,28 @@ class ReportPackageApiContractTests(unittest.TestCase):
         self.assertEqual(handler.status, 200)
         save_mock.assert_called_once()
 
+    def test_wreck_review_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/admin/wrecks/wreck_51100000_17200000/review",
+            {"public_review_status": "approved"},
+            headers={**admin_cookie(), "X-Request-ID": "wreck-review-req"},
+            method="PATCH",
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "review_wreck", side_effect=OSError("wreck review token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_PATCH(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zapisać decyzji przeglądu sprawy.")
+        self.assertEqual(payload["request_id"], "wreck-review-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("wreck review token=secret", "\n".join(logs.output))
+
     def test_wreck_layer_visibility_filters_guest_api_only(self):
         wrecks = [{"id": "wreck_1", "lat": 51.1, "lon": 17.2}]
         settings = {
@@ -796,7 +1571,7 @@ class ReportPackageApiContractTests(unittest.TestCase):
                 "field_photo_smoke": True,
             }
         }
-        guest = make_handler("/api/wrecks")
+        guest = make_handler("/api/wrecks", headers={"X-Request-ID": "wrecks-list-req"})
         admin = make_handler("/api/wrecks", headers=admin_cookie())
 
         with (
@@ -807,7 +1582,12 @@ class ReportPackageApiContractTests(unittest.TestCase):
             server.Handler.do_GET(guest)
             server.Handler.do_GET(admin)
 
-        self.assertEqual(handler_json(guest)["wrecks"], [])
+        guest_payload = handler_json(guest)
+        self.assertEqual(guest_payload["wrecks"], [])
+        self.assertNotIn("request_id", guest_payload)
+        self.assertEqual(response_header(guest, "X-Request-ID"), "wrecks-list-req")
+        self.assertEqual(response_header(guest, "Cache-Control"), "no-store")
+        self.assertIsNotNone(response_header(guest, "Content-Length"))
         self.assertEqual(handler_json(admin)["wrecks"], wrecks)
 
     def test_report_package_endpoint_accepts_multipart_and_generates_zip(self):
@@ -975,7 +1755,9 @@ class ReportPackageApiContractTests(unittest.TestCase):
                 {"public_review_status": "rejected", "redactions": []},
                 headers=admin_cookie(),
             )
-            no_admin_delete = make_handler(f"/api/admin/photos/wreck/wreck_51100000_17200000/{photo['id']}", method="DELETE")
+            no_admin_delete = make_handler(
+                f"/api/admin/photos/wreck/wreck_51100000_17200000/{photo['id']}", method="DELETE"
+            )
             delete_photo = make_handler(
                 f"/api/admin/photos/wreck/wreck_51100000_17200000/{photo['id']}",
                 headers=admin_cookie(),
@@ -1009,7 +1791,9 @@ class ReportPackageApiContractTests(unittest.TestCase):
 
             with (
                 patch.object(core_config, "WRECKS_DIR", wrecks_dir),
-                patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")),
+                patch.object(
+                    server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")
+                ),
             ):
                 server.Handler.do_POST(handler)
 
@@ -1036,10 +1820,93 @@ class ReportPackageApiContractTests(unittest.TestCase):
             self.assertIn("Dodaj zdjęcia do sprawy", body)
             self.assertIn("wreck-photo-form", body)
 
+    def test_public_wreck_asset_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/zidentyfikowane_wraki/wreck_51100000_17200000/evidence/abc123/2025.jpg",
+            headers={"X-Request-ID": "wreck-asset-req"},
+        )
+
+        with (
+            patch.object(server, "wreck_is_public", return_value=True),
+            patch.object(server, "public_wreck_asset", side_effect=OSError("wreck asset token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać publicznego pliku sprawy pojazdu.")
+        self.assertEqual(payload["request_id"], "wreck-asset-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("wreck asset token=secret", "\n".join(logs.output))
+
 
 class FieldPhotoApiContractTests(unittest.TestCase):
     def setUp(self):
         patch_default_app_settings(self)
+
+    def test_field_photo_upload_unexpected_error_hides_details(self):
+        handler = make_handler("/api/field-photos", headers={"X-Request-ID": "field-photo-req"})
+        uploaded = UploadedFile("photo", "teren.jpg", "image/jpeg", image_bytes())
+
+        with (
+            patch.object(
+                server.Handler,
+                "_read_multipart_form",
+                return_value=({"fallback_lat": "51.1", "fallback_lon": "17.1"}, [uploaded]),
+            ),
+            patch.object(server.Handler, "_ensure_public_submission_quota", return_value=None),
+            patch.object(server, "save_field_photo", side_effect=RuntimeError("field photo token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_POST(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się zapisać zdjęcia terenowego.")
+        self.assertEqual(payload["request_id"], "field-photo-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("field photo token=secret", "\n".join(logs.output))
+
+    def test_field_photo_asset_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/field-photos/photo_20260611T120000Z_deadbeef/public-image",
+            headers={"X-Request-ID": "field-asset-req"},
+        )
+
+        with (
+            patch.object(server, "field_photo_asset", side_effect=OSError("field asset token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_GET(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się pobrać pliku zdjęcia terenowego.")
+        self.assertEqual(payload["request_id"], "field-asset-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("field asset token=secret", "\n".join(logs.output))
+
+    def test_field_photo_delete_unexpected_error_hides_details(self):
+        handler = make_handler(
+            "/api/field-photos/photo_20260611T120000Z_deadbeef",
+            headers={**admin_cookie(), "X-Request-ID": "field-delete-req"},
+            method="DELETE",
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "delete_field_photo", side_effect=OSError("field delete token=secret")),
+            self.assertLogs("wreckscanner.server", level="ERROR") as logs,
+        ):
+            server.Handler.do_DELETE(handler)
+
+        payload = handler_json(handler)
+        self.assertEqual(handler.status, 500)
+        self.assertEqual(payload["error"], "Nie udało się usunąć zdjęcia terenowego.")
+        self.assertEqual(payload["request_id"], "field-delete-req")
+        self.assertNotIn("secret", json.dumps(payload))
+        self.assertIn("field delete token=secret", "\n".join(logs.output))
 
     def test_field_photo_upload_allows_public_pending_submission(self):
         with TemporaryDirectory() as tmp:
@@ -1084,7 +1951,9 @@ class FieldPhotoApiContractTests(unittest.TestCase):
             files=[("photo", "teren.jpg", "image/jpeg", image_bytes())],
         )
 
-        with patch.object(server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")):
+        with patch.object(
+            server, "load_app_settings", return_value=app_settings_with_disabled_feature("photo_uploads")
+        ):
             server.Handler.do_POST(handler)
 
         self.assertEqual(handler.status, 403)
@@ -1123,6 +1992,50 @@ class FieldPhotoApiContractTests(unittest.TestCase):
 
         self.assertEqual([photo["id"] for photo in handler_json(guest)["photos"]], ["p1"])
         self.assertEqual([photo["id"] for photo in handler_json(admin)["photos"]], ["p1", "p2", "p3"])
+
+    def test_admin_photo_queue_filters_status_scope_issue_and_search(self):
+        field_photos = [
+            {
+                "id": "field-record-1",
+                "photo_id": "field-1",
+                "scope": "field",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            },
+            {
+                "id": "field-record-2",
+                "photo_id": "field-2",
+                "scope": "field",
+                "public_review_status": "approved",
+                "issue_type": "smoke",
+                "original_filename": "dym-zaakceptowany.jpg",
+            },
+        ]
+        wreck_photos = [
+            {
+                "id": "wreck-photo-1",
+                "photo_id": "wreck-1",
+                "scope": "wreck",
+                "public_review_status": "pending",
+                "issue_type": "smoke",
+                "original_filename": "dym.jpg",
+            }
+        ]
+        handler = make_handler(
+            "/api/admin/photos?status=pending&scope=field&issue_type=smoke&q=dym",
+            headers=admin_cookie(),
+        )
+
+        with (
+            patch.dict(os.environ, {"WRECKSCANNER_ADMIN_PASSWORD": "secret"}),
+            patch.object(server, "list_field_photo_review_items", return_value=field_photos),
+            patch.object(server, "list_wreck_photo_review_items", return_value=wreck_photos),
+        ):
+            server.Handler.do_GET(handler)
+
+        self.assertEqual(handler.status, 200)
+        self.assertEqual([photo["photo_id"] for photo in handler_json(handler)["photos"]], ["field-1"])
 
     def test_field_photo_list_assets_are_public_and_delete_requires_admin(self):
         with TemporaryDirectory() as tmp:

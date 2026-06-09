@@ -71,7 +71,7 @@ class FrontendCacheSettingsContractTests(unittest.TestCase):
         self.assertIn("const currentLabel = document.getElementById('year-current')", app_js)
         self.assertIn("currentLabel.textContent = source.shortLabel", app_js)
         self.assertIn("currentLabel.title = source.label", app_js)
-        self.assertIn("grid-template-areas:\n            \"prev track next\"\n            \". current .\";", styles)
+        self.assertIn('grid-template-areas:\n            "prev track next"\n            ". current .";', styles)
         self.assertIn("width: min(420px, calc(100vw - 24px));", styles)
         self.assertIn("let mapSourceSwapToken = 0", app_js)
         self.assertIn("const swapToken = ++mapSourceSwapToken", app_js)
@@ -198,18 +198,18 @@ class FrontendCacheSettingsContractTests(unittest.TestCase):
         self.assertIn('class="review-tool-actions"', html)
         self.assertIn('class="review-decision-actions"', html)
         self.assertIn('class="report-copy-btn review-icon-btn"', html)
-        self.assertIn("data-i18n-attr=\"title:modal.photoReview.undo;aria-label:modal.photoReview.undo\"", html)
-        self.assertIn("data-i18n-attr=\"title:modal.wreckReview.showOnMap;aria-label:modal.wreckReview.showOnMap\"", html)
+        self.assertIn('data-i18n-attr="title:modal.photoReview.undo;aria-label:modal.photoReview.undo"', html)
+        self.assertIn('data-i18n-attr="title:modal.wreckReview.showOnMap;aria-label:modal.wreckReview.showOnMap"', html)
         self.assertIn('data-i18n="modal.photoReview.savePendingShort"', html)
         self.assertIn('data-i18n="modal.photoReview.deleteShort"', html)
         self.assertIn('data-i18n="modal.wreckReview.savePendingShort"', html)
         self.assertIn('data-i18n="modal.wreckReview.deleteShort"', html)
         self.assertIn('class="review-action-icon"', html)
         self.assertIn('class="review-action-label"', html)
-        self.assertIn("data-i18n-attr=\"title:modal.photoReview.approve;aria-label:modal.photoReview.approve\"", html)
-        self.assertIn("data-i18n-attr=\"title:modal.wreckReview.approve;aria-label:modal.wreckReview.approve\"", html)
+        self.assertIn('data-i18n-attr="title:modal.photoReview.approve;aria-label:modal.photoReview.approve"', html)
+        self.assertIn('data-i18n-attr="title:modal.wreckReview.approve;aria-label:modal.wreckReview.approve"', html)
         self.assertIn('id="photo-review-delete"', html)
-        self.assertIn("onclick=\"deletePhotoReviewItem()\"", html)
+        self.assertIn('onclick="deletePhotoReviewItem()"', html)
         self.assertIn("function rotatePhotoRedaction(degrees)", app_js)
         self.assertIn("function moveRedaction(redaction, dx, dy)", app_js)
         self.assertIn(
@@ -629,7 +629,9 @@ class FrontendCacheSettingsContractTests(unittest.TestCase):
         self.assertIn("'fieldPhoto.issueType.infrastructure': 'Niebezpieczna infrastruktura'", i18n_js)
         self.assertIn("'fieldPhoto.issueType.smoke': 'Zanieczyszczone powietrze'", i18n_js)
         self.assertIn("'fieldPhoto.issueType.smoke': 'Polluted air'", i18n_js)
-        self.assertIn("'modal.fieldPhoto.issueTypeUnavailable': 'Ta kategoria jest wyłączona w warstwach mapy.'", i18n_js)
+        self.assertIn(
+            "'modal.fieldPhoto.issueTypeUnavailable': 'Ta kategoria jest wyłączona w warstwach mapy.'", i18n_js
+        )
         self.assertIn("'modal.fieldPhoto.ignoreExifGps': 'Ignoruj GPS z EXIF i użyj punktu mapy'", i18n_js)
         self.assertNotIn("'fieldPhoto.moveTitle'", i18n_js)
         self.assertNotIn("'fieldPhoto.attachToWreckTitle'", i18n_js)
@@ -826,7 +828,9 @@ class FrontendCacheSettingsContractTests(unittest.TestCase):
         self.assertIn("addPendingSubmissionMarker({ lat: data.wreck?.lat ?? latNumber", app_js)
         self.assertIn("t('inspect.submittedWreck')", app_js)
         self.assertIn("body: JSON.stringify({ lat: latNumber, lon: lonNumber, cropM })", app_js)
-        self.assertIn("body: JSON.stringify({ lat: inspectLat, lon: inspectLon, cropM: selectedReviewCropM() })", app_js)
+        self.assertIn(
+            "body: JSON.stringify({ lat: inspectLat, lon: inspectLon, cropM: selectedReviewCropM() })", app_js
+        )
         self.assertIn("saveManualWreck(${inspectLat.toFixed(8)}, ${inspectLon.toFixed(8)}, this)", app_js)
         self.assertIn("'layers.savedWrecks': 'Sprawy pojazdów'", i18n_js)
         self.assertIn("'layers.cadastral': 'Granice działek'", i18n_js)
@@ -848,10 +852,15 @@ class FrontendCacheSettingsContractTests(unittest.TestCase):
         self.assertIn("'layers.fieldPhotoInfrastructure': 'Niebezpieczna infrastruktura'", i18n_js)
         self.assertIn("'layers.fieldPhotoSmoke': 'Zanieczyszczone powietrze'", i18n_js)
         self.assertIn("'layers.fieldPhotoPending': 'Do weryfikacji'", i18n_js)
-        self.assertIn("'pendingSubmission.reviewHint': 'Czeka na zatwierdzenie administratora. Ten znacznik jest widoczny tylko lokalnie.'", i18n_js)
+        self.assertIn(
+            "'pendingSubmission.reviewHint': 'Czeka na zatwierdzenie administratora. Ten znacznik jest widoczny tylko lokalnie.'",
+            i18n_js,
+        )
         self.assertIn("'fieldPhoto.pendingPublicHint': 'Czeka na zatwierdzenie administratora.'", i18n_js)
         self.assertIn("'modal.fieldPhoto.submittedForReview': 'Zdjęcia wysłane do weryfikacji: {n}.'", i18n_js)
-        self.assertIn("'wreck.submittedForReview': 'Zgłoszenie zapisane i czeka na zatwierdzenie administratora.'", i18n_js)
+        self.assertIn(
+            "'wreck.submittedForReview': 'Zgłoszenie zapisane i czeka na zatwierdzenie administratora.'", i18n_js
+        )
         self.assertIn(".pending-submission-pin", styles)
         self.assertNotIn(".map-popup-thumb--pending", styles)
         self.assertIn("'layers.fieldPhotoSmoke': 'Polluted air'", i18n_js)

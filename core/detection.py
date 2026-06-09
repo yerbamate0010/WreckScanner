@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,7 +8,6 @@ from typing import Any
 
 import cv2
 import numpy as np
-from ultralytics import YOLO
 
 from core.config import (
     CAR_CLASSES,
@@ -26,6 +26,8 @@ from core.config import (
 from core.models import Detection
 from core.vehicle_size import looks_like_vehicle_size
 
+logger = logging.getLogger(__name__)
+
 
 def resolve_device(device: str) -> str:
     if device != "auto":
@@ -36,13 +38,13 @@ def resolve_device(device: str) -> str:
         if torch.backends.mps.is_available():
             return "mps"
     except Exception:
-        pass
+        return "cpu"
     return "cpu"
 
 
 @dataclass(slots=True)
 class YoloDetector:
-    model: YOLO
+    model: Any
     device: str
 
     def predict(self, img: np.ndarray, conf: float, imgsz: int) -> list[Any]:
@@ -57,7 +59,7 @@ class YoloDetector:
             )
         except Exception as exc:
             if self.device == "mps":
-                print(f"⚠️  MPS nie obsłużył predykcji YOLO ({exc}); przełączam na CPU.")
+                logger.warning("MPS did not handle YOLO prediction (%s); falling back to CPU.", exc)
                 self.device = "cpu"
                 return self.model.predict(
                     img,
@@ -71,6 +73,8 @@ class YoloDetector:
 
 
 def load_detector(model_path: Path | str, device: str) -> YoloDetector:
+    from ultralytics import YOLO
+
     path = Path(model_path)
     if not path.exists():
         raise FileNotFoundError(
@@ -121,7 +125,7 @@ def detect_cars(
         polys = result.obb.xyxyxyxy.cpu().numpy()
         classes = result.obb.cls.cpu().numpy().astype(int)
         confs = result.obb.conf.cpu().numpy()
-        for poly, class_id, det_conf in zip(polys, classes, confs):
+        for poly, class_id, det_conf in zip(polys, classes, confs, strict=False):
             class_id = int(class_id)
             if class_id not in CAR_CLASSES:
                 continue

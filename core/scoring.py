@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from typing import Any
 
@@ -28,6 +29,8 @@ from core.config import (
 )
 from core.models import Candidate, Detection, DetectionMatch, ImageItem, Observation
 from core.vision import aligned_image, dominant_color_hsv, hsv_similarity, local_visibility, parse_year, pixel_to_latlon
+
+logger = logging.getLogger(__name__)
 
 
 def angle_diff_deg(a: float, b: float) -> float:
@@ -118,7 +121,7 @@ def score_candidates(
     px_per_m: float,
     eps_px: float,
 ) -> list[Candidate]:
-    print(f"Kadrowanie historii na podstawie {len(ref_item.dets)} pojazdów z najnowszego zdjęcia...")
+    logger.info("Kadrowanie historii na podstawie %s pojazdów z najnowszego zdjęcia...", len(ref_item.dets))
     candidates: list[Candidate] = []
     ref_img = aligned_image(ref_item)
 

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import shutil
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import requests
@@ -33,6 +36,7 @@ from scripts.download_geoportal_wfs_geotiff import (
 
 ProgressCallback = Callable[..., None]
 _thread_local = threading.local()
+logger = logging.getLogger(__name__)
 
 
 def get_http_session() -> requests.Session:
@@ -89,10 +93,8 @@ def cleanup_old_data() -> None:
     if data_dir.is_dir():
         for path in data_dir.iterdir():
             if path.name.endswith(".png") or path.name == "metadata.json":
-                try:
+                with suppress(OSError):
                     path.unlink()
-                except OSError:
-                    pass
             elif path.name == ".temp" and path.is_dir():
                 shutil.rmtree(path, ignore_errors=True)
     if config.ANALYSIS_DIR.is_dir():
@@ -278,7 +280,17 @@ def apply_wfs_geotiff_replacements(
                     cache_report=geotiff_cache_report(config.WFS_GEOTIFF_CACHE_DIR),
                 )
 
-        def on_download_progress(done, total, *, resume_from=0, resumed=False, restarted=False):
+        def on_download_progress(
+            done,
+            total,
+            *,
+            resume_from=0,
+            resumed=False,
+            restarted=False,
+            selected=selected,
+            tif_path=tif_path,
+            year=year,
+        ):
             effective_total = total or int((selected.file_size_mb or 0) * BYTES_PER_MIB)
             effective_total = max(effective_total, done)
             sheet_name = selected.godlo or tif_path.name
@@ -598,7 +610,7 @@ def download_maps(
                 if ok:
                     success_counts[year] += 1
                 else:
-                    print(f"Błąd WMS dla kafelka {year} {c},{r}: {error}")
+                    logger.warning("Błąd WMS dla kafelka %s %s,%s: %s", year, c, r, error)
 
     for year in config.WMS_YEARS:
         success_count = success_counts[year]
@@ -617,7 +629,7 @@ def download_maps(
                     "status": "missing",
                     "detail": f"WMS zwrócił pusty obraz dla {year} (std={std:.1f}) — brak ortofoto dla tego roku",
                 }
-                print(f"   ⏭  {year}: brak ortofoto (std={std:.1f})")
+                logger.info("%s: brak ortofoto (std=%.1f)", year, std)
             else:
                 filepath = config.DOWNLOAD_DATA_DIR / f"ortofoto_{year}.png"
                 final_img.save(filepath)

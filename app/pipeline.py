@@ -16,9 +16,15 @@ class HttpJsonError(Exception):
 
 
 _pipeline_lock = threading.Lock()
+
+
+def _empty_pipeline_token() -> str | None:
+    return None
+
+
 _pipeline_state = {
     "status": "idle",
-    "token": None,
+    "token": _empty_pipeline_token(),
     "client": None,
     "stage": None,
     "started_at": None,
@@ -90,7 +96,7 @@ def cleanup_stale_pipeline(now: float | None = None) -> None:
     _pipeline_state.update(
         {
             "status": "idle",
-            "token": None,
+            "token": _empty_pipeline_token(),
             "client": None,
             "stage": None,
             "started_at": None,
@@ -149,7 +155,7 @@ def finish_pipeline(token: str | None = None) -> None:
         _pipeline_state.update(
             {
                 "status": "idle",
-                "token": None,
+                "token": _empty_pipeline_token(),
                 "client": None,
                 "stage": None,
                 "started_at": None,

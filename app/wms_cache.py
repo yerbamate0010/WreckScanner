@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import threading
 import time
@@ -14,6 +15,7 @@ from core.settings_store import load_app_settings
 
 _cleanup_lock = threading.Lock()
 _last_cleanup = 0.0
+logger = logging.getLogger(__name__)
 
 
 def strip_proxy_only_params(upstream_path: str) -> str:
@@ -72,7 +74,7 @@ def write_tile_cache(cache_path: Path, data: bytes) -> None:
         tmp_path.write_bytes(data)
         os.replace(tmp_path, cache_path)
     except OSError as exc:
-        print(f"⚠️  WMS tile cache write failed for {cache_path}: {exc}")
+        logger.warning("WMS tile cache write failed for %s: %s", cache_path, exc)
     finally:
         try:
             if "tmp_path" in locals() and tmp_path.exists():
@@ -117,7 +119,7 @@ def cleanup_tile_cache(force: bool = False) -> None:
             total -= size
             removed += 1
         if removed:
-            print(f"🧹 WMS tile cache cleanup: removed {removed} tiles, total={total / BYTES_PER_GIB:.2f} GB")
+            logger.info("WMS tile cache cleanup: removed %s tiles, total=%.2f GB", removed, total / BYTES_PER_GIB)
     finally:
         _cleanup_lock.release()
 

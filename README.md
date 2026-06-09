@@ -286,12 +286,12 @@ Skrypt wybiera `.venv/bin/python`, jeśli istnieje, kompiluje moduły Pythona, o
 | **Mapillary** | 2014–dziś | crowdsourcing |
 | **Street View / Apple Maps** | różnie | weryfikacja manualna |
 
-**Endpointy WMS:**
+**Endpointy WMS/WMTS:**
 - `https://gis1.um.wroc.pl/arcgis/services/ogc/OGC_ortofoto_{rok}/MapServer/WMSServer`
-- `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution`
+- `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution`
 - `https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/Archiwalne`
 
-Warstwa `StandardResolution` jest używana tylko jako publiczny podgląd w dolnym suwaku. `HighResolution` nie jest pokazana osobno, bo dla testowanego obszaru dublowała podkład Wrocław 2024. Prawdziwa ortofotomapa Geoportalu (`TrueOrtho`) nie jest pokazywana w suwaku, bo w obecnym układzie mapy Leaflet/EPSG:3857 zwracała puste kafle dla testowanych punktów.
+Warstwa `StandardResolution` jest używana tylko jako publiczny podgląd WMTS w dolnym suwaku. `HighResolution` nie jest pokazana osobno, bo dla testowanego obszaru dublowała podkład Wrocław 2024. Prawdziwa ortofotomapa Geoportalu (`TrueOrtho`) nie jest pokazywana w suwaku, bo w obecnym układzie mapy Leaflet/EPSG:3857 zwracała puste kafle dla testowanych punktów.
 
 **WFS → GeoTIFF cache:**
 

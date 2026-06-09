@@ -12,6 +12,10 @@
   - Dodać `pre-commit` do uruchamiania format/lint przed commitem.
   - Opcjonalnie dodać `pip-audit` oraz `bandit` dla zależności i podstawowych ryzyk bezpieczeństwa.
 
+- [ ] Ograniczyć rozmiar JSON body w endpointach API.
+  - Odrzucać zbyt duże payloady JSON kodem 413 przed wczytaniem całego body do pamięci.
+  - Pokryć testami kontraktowymi ustawienia, analizę i admin JSON handlery.
+
 - [ ] Modularyzacja frontendu.
   - `web/app.js` urósł i warto go dzielić etapami na moduły mapy, popupów, zdjęć, raportów i admina.
   - Robić to dopiero po ustabilizowaniu UI, bez mieszania z dużymi zmianami funkcjonalnymi.

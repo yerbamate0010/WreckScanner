@@ -15,6 +15,7 @@ from typing import Any
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from core import config
+from core.json_io import write_json_atomic
 from core.photo_privacy import is_approved
 from core.report_pdf import PdfPhoto, build_report_pdf
 from core.wrecks import render_wreck_record_html
@@ -65,7 +66,7 @@ def _read_json(path: Path) -> Any:
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json_atomic(path, payload)
 
 
 def _iso(dt: datetime) -> str:
@@ -206,7 +207,8 @@ def prepare_report_photos(uploads: list[ReportPhotoUpload]) -> list[PreparedRepo
 def _package_id(wreck_id: str, fields: dict[str, str]) -> str:
     stamp = _now_utc().strftime("%Y%m%dT%H%M%SZ")
     digest = hashlib.sha1(
-        f"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}".encode("utf-8")
+        f"{wreck_id}:{fields['location_description']}:{stamp}:{secrets.token_urlsafe(8)}".encode(),
+        usedforsecurity=False,
     ).hexdigest()[:8]
     return f"report_{stamp}_{digest}"
 

@@ -7,6 +7,7 @@ from typing import Any
 
 from core import config
 from core.config import DEFAULT_ENHANCEMENT_SETTINGS, EnhancementSettings
+from core.json_io import write_json_atomic
 
 SETTINGS_PATH = Path(__file__).resolve().parent.parent / config.SETTINGS_FILENAME
 DEFAULT_PUBLIC_LAYERS: dict[str, bool] = {
@@ -165,8 +166,6 @@ def save_app_settings(raw: dict[str, Any]) -> dict[str, Any]:
     if "public_features" in raw:
         current["public_features"] = public_feature_settings_from_dict(raw["public_features"])
 
-    with SETTINGS_PATH.open("w", encoding="utf-8") as f:
-        json.dump(current, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    write_json_atomic(SETTINGS_PATH, current)
 
     return current

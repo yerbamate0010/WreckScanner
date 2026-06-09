@@ -13,9 +13,9 @@ Użycie:
 import json
 import os
 import sys
-import xml.etree.ElementTree as ET
 
 import requests
+from defusedxml import ElementTree as ET
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:

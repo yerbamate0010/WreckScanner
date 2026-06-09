@@ -8,6 +8,7 @@ from typing import Any
 
 from core import config
 from core.field_photos import FIELD_PHOTO_ID_RE
+from core.json_io import write_json_atomic
 from core.photo_privacy import ensure_review_fields, migrate_private_original, safe_child
 
 
@@ -21,10 +22,7 @@ def _read_json(path: Path) -> Any:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    write_json_atomic(path, payload)
 
 
 def _field_photo_record_dir(photo_id: Any, field_photos_dir: Path) -> Path:
